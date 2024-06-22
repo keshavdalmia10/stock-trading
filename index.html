@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Candlestick Chart Test</title>
+    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+</head>
+<body>
+<div id="chart" style="height: 500px; width: 800px;"></div>
+<script>
+    const chart = LightweightCharts.createChart(document.getElementById('chart'), { width: 800, height: 500 });
+    const candleSeries = chart.addCandlestickSeries();
+    candleSeries.setData([
+        { time: '2023-01-01', open: 100, high: 110, low: 90, close: 105 },
+        { time: '2023-01-02', open: 105, high: 115, low: 95, close: 100 },
+    ]);
+</script>
+</body>
+</html>
