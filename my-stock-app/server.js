@@ -11,8 +11,10 @@ const port = 3000;
 const formatDateForChart = (date) => {
     if (!date) return null;
     if (date instanceof Date) {
+        console.log(date.toISOString().split('T')[0])
         return date.toISOString().split('T')[0];
     } else if (typeof date === 'string') {
+        console.log(date.split('T')[0])
         return date.split('T')[0];
     }
     return date;
@@ -140,7 +142,7 @@ app.get('/generate-chart/:symbol', async (req, res) => {
         const stockData = await fetchStockDataFromAPI(symbol);
 
         const chartData = stockData.map(entry => ({
-            time: formatDateForChart(new Date(entry.Datetime)),
+            time: new Date(entry.Datetime).getTime() / 1000,
             open: entry.Open,
             high: entry.High,
             low: entry.Low,
@@ -148,7 +150,7 @@ app.get('/generate-chart/:symbol', async (req, res) => {
         }));
 
         const volumeData = stockData.map(entry => ({
-            time: formatDateForChart(new Date(entry.Datetime)),
+            time: new Date(entry.Datetime).getTime() / 1000,
             value: entry.Volume
         }));
 
@@ -194,6 +196,7 @@ app.get('/generate-chart/:symbol', async (req, res) => {
         }));
 
         const candlestickPath = await generateChart(symbol, 'candlestick', chartData);
+        console.log(chartData)
         const volumePath = await generateChart(symbol, 'volume', volumeData);
         const atrPath = await generateChart(symbol, 'atr', atrData);
         const rsiPath = await generateChart(symbol, 'rsi', rsiData);
