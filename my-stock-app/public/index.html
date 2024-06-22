@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Stock Candlestick Chart</title>
+    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+</head>
+<body>
+<div id="chart" style="height: 300px; width: 600px;"></div>
+<script>
+    const chart = LightweightCharts.createChart(document.getElementById('chart'), { width: 600, height: 300 });
+    const candleSeries = chart.addCandlestickSeries();
+
+    fetch('/api/stocks/AAPL')
+        .then(response => response.json())
+        .then(data => {
+            candleSeries.setData(data.map(d => ({
+                time: d.Datetime.slice(0, 10),
+                open: d.Open,
+                high: d.High,
+                low: d.Low,
+                close: d.Close
+            })));
+        })
+        .catch(err => console.error('Error loading data:', err));
+</script>
+</body>
+</html>
