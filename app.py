@@ -40,6 +40,11 @@ def calculate_pivot_points(data):
         "fibonacci": {"P": P, "S1": fS1, "S2": fS2, "S3": fS3, "R1": fR1, "R2": fR2, "R3": fR3}
     }
 
+@app.route('/api/data/<ticker>/<period>/<interval>')
+def get_data(ticker, period, interval):
+    stock_data = fetch_stock_data(ticker, period, interval)
+    return jsonify(stock_data)
+
 @app.route('/api/pivot/<ticker>/<period>/<interval>')
 def get_pivot_data(ticker, period, interval):
     stock_data = fetch_stock_data(ticker, period, interval)
