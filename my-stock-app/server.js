@@ -1,3 +1,4 @@
+// JavaScript (Express) part
 const express = require('express');
 const puppeteer = require('puppeteer');
 const fetch = require('node-fetch');
@@ -8,118 +9,197 @@ const fs = require('fs');
 const app = express();
 const port = 3000;
 
-const formatDateForChart = (date) => {
-    if (!date) return null;
-    if (date instanceof Date) {
-        console.log(date.toISOString().split('T')[0])
-        return date.toISOString().split('T')[0];
-    } else if (typeof date === 'string') {
-        console.log(date.split('T')[0])
-        return date.split('T')[0];
-    }
-    return date;
-};
-
 const generateChart = async (symbol, indicatorType, data) => {
     const browser = await puppeteer.launch({ headless: true });
     const page = await browser.newPage();
 
     let chartScript = '';
 
+    const formatTime = (time) => {
+        const date = new Date(time * 1000);
+        return date.toLocaleDateString();
+    };
+
     switch (indicatorType) {
         case 'candlestick':
             chartScript = `
-                const chart = LightweightCharts.createChart(document.getElementById('chart'), { width: 800, height: 300 });
-                const candleSeries = chart.addCandlestickSeries();
-                candleSeries.setData(${JSON.stringify(data)});
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Candlestick Chart</title>
+                    <style>
+                        body, html { margin: 0; padding: 0; height: 100%; }
+                        #chart { width: 100%; height: 100%; }
+                    </style>
+                    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+                </head>
+                <body>
+                    <div id="chart"></div>
+                    <script>
+                        const chart = LightweightCharts.createChart(document.getElementById('chart'), { width: 800, height: 300 });
+                        chart.applyOptions({
+                            layout: { textColor: '#000' },
+                            watermark: { color: 'blue', visible: true, text: 'Candlestick', fontSize: 24, horzAlign: 'left', vertAlign: 'top' },
+                            timeScale: { timeVisible: true, timeFormatter: ${formatTime.toString()} }
+                        });
+                        const candleSeries = chart.addCandlestickSeries();
+                        candleSeries.setData(${JSON.stringify(data)});
+                    </script>
+                </body>
+                </html>
             `;
             break;
         case 'volume':
             chartScript = `
-                const chart = LightweightCharts.createChart(document.getElementById('chart'), { width: 800, height: 300 });
-                const volumeSeries = chart.addHistogramSeries({
-                    color: 'rgba(76, 175, 80, 0.5)',
-                    priceFormat: {
-                        type: 'volume',
-                    },
-                    priceScaleId: '',
-                    scaleMargins: {
-                        top: 0.9,
-                        bottom: 0,
-                    },
-                });
-                volumeSeries.setData(${JSON.stringify(data)});
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Volume Chart</title>
+                    <style>
+                        body, html { margin: 0; padding: 0; height: 100%; }
+                        #chart { width: 100%; height: 100%; }
+                    </style>
+                    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+                </head>
+                <body>
+                    <div id="chart"></div>
+                    <script>
+                        const chart = LightweightCharts.createChart(document.getElementById('chart'), { width: 800, height: 300 });
+                        chart.applyOptions({
+                            layout: { textColor: '#000' },
+                            watermark: { color: 'green', visible: true, text: 'Volume', fontSize: 24, horzAlign: 'left', vertAlign: 'top' },
+                            timeScale: { timeVisible: true, timeFormatter: ${formatTime.toString()} }
+                        });
+                        const volumeSeries = chart.addHistogramSeries({
+                            color: 'rgba(76, 175, 80, 0.5)',
+                            priceFormat: {
+                                type: 'volume',
+                            },
+                            priceScaleId: '',
+                            scaleMargins: {
+                                top: 0.9,
+                                bottom: 0,
+                            },
+                        });
+                        volumeSeries.setData(${JSON.stringify(data)});
+                    </script>
+                </body>
+                </html>
             `;
             break;
         case 'atr':
             chartScript = `
-                const chart = LightweightCharts.createChart(document.getElementById('chart'), { width: 800, height: 300 });
-                const atrSeries = chart.addLineSeries({
-                    color: 'red',
-                    lineWidth: 1,
-                    priceScaleId: '',
-                });
-                atrSeries.setData(${JSON.stringify(data)});
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>ATR Chart</title>
+                    <style>
+                        body, html { margin: 0; padding: 0; height: 100%; }
+                        #chart { width: 100%; height: 100%; }
+                    </style>
+                    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+                </head>
+                <body>
+                    <div id="chart"></div>
+                    <script>
+                        const chart = LightweightCharts.createChart(document.getElementById('chart'), { width: 800, height: 300 });
+                        chart.applyOptions({
+                            layout: { textColor: '#000' },
+                            watermark: { color: 'red', visible: true, text: 'ATR', fontSize: 24, horzAlign: 'left', vertAlign: 'top' },
+                            timeScale: { timeVisible: true, timeFormatter: ${formatTime.toString()} }
+                        });
+                        const atrSeries = chart.addLineSeries({
+                            color: 'red',
+                            lineWidth: 1,
+                            priceScaleId: '',
+                        });
+                        atrSeries.setData(${JSON.stringify(data)});
+                    </script>
+                </body>
+                </html>
             `;
             break;
         case 'rsi':
             chartScript = `
-                const chart = LightweightCharts.createChart(document.getElementById('chart'), { width: 800, height: 300 });
-                const rsiSeries = chart.addLineSeries({
-                    color: 'purple',
-                    lineWidth: 2,
-                    priceScaleId: '',
-                });
-                rsiSeries.setData(${JSON.stringify(data)});
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>RSI Chart</title>
+                    <style>
+                        body, html { margin: 0; padding: 0; height: 100%; }
+                        #chart { width: 100%; height: 100%; }
+                    </style>
+                    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+                </head>
+                <body>
+                    <div id="chart"></div>
+                    <script>
+                        const chart = LightweightCharts.createChart(document.getElementById('chart'), { width: 800, height: 300 });
+                        chart.applyOptions({
+                            layout: { textColor: '#000' },
+                            watermark: { color: 'purple', visible: true, text: 'RSI', fontSize: 24, horzAlign: 'left', vertAlign: 'top' },
+                            timeScale: { timeVisible: true, timeFormatter: ${formatTime.toString()} }
+                        });
+                        const rsiSeries = chart.addLineSeries({
+                            color: 'purple',
+                            lineWidth: 2,
+                            priceScaleId: '',
+                        });
+                        rsiSeries.setData(${JSON.stringify(data)});
+                    </script>
+                </body>
+                </html>
             `;
             break;
         case 'macd':
             chartScript = `
-                const chart = LightweightCharts.createChart(document.getElementById('chart'), { width: 800, height: 300 });
-                const macdLineSeries = chart.addLineSeries({
-                    color: 'blue',
-                    lineWidth: 1,
-                    priceScaleId: '',
-                });
-                macdLineSeries.setData(${JSON.stringify(data.macdLine)});
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>MACD Chart</title>
+                    <style>
+                        body, html { margin: 0; padding: 0; height: 100%; }
+                        #chart { width: 100%; height: 100%; }
+                    </style>
+                    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+                </head>
+                <body>
+                    <div id="chart"></div>
+                    <script>
+                        const chart = LightweightCharts.createChart(document.getElementById('chart'), { width: 800, height: 300 });
+                        chart.applyOptions({
+                            layout: { textColor: '#000' },
+                            watermark: { color: 'blue', visible: true, text: 'MACD', fontSize: 24, horzAlign: 'left', vertAlign: 'top' },
+                            timeScale: { timeVisible: true, timeFormatter: ${formatTime.toString()} }
+                        });
+                        const macdLineSeries = chart.addLineSeries({
+                            color: 'blue',
+                            lineWidth: 1,
+                            priceScaleId: '',
+                        });
+                        macdLineSeries.setData(${JSON.stringify(data.macdLine)});
 
-                const signalLineSeries = chart.addLineSeries({
-                    color: 'orange',
-                    lineWidth: 1,
-                    priceScaleId: '',
-                });
-                signalLineSeries.setData(${JSON.stringify(data.signalLine)});
+                        const signalLineSeries = chart.addLineSeries({
+                            color: 'orange',
+                            lineWidth: 1,
+                            priceScaleId: '',
+                        });
+                        signalLineSeries.setData(${JSON.stringify(data.signalLine)});
 
-                const histogramSeries = chart.addHistogramSeries({
-                    color: 'rgba(255, 0, 0, 0.5)',
-                    lineWidth: 1,
-                    priceScaleId: '',
-                });
-                histogramSeries.setData(${JSON.stringify(data.histogram)});
+                        const histogramSeries = chart.addHistogramSeries({
+                            color: 'rgba(255, 0, 0, 0.5)',
+                            lineWidth: 1,
+                            priceScaleId: '',
+                        });
+                        histogramSeries.setData(${JSON.stringify(data.histogram)});
+                    </script>
+                </body>
+                </html>
             `;
             break;
     }
 
-    await page.setContent(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>${indicatorType} Chart</title>
-            <style>
-                body, html { margin: 0; padding: 0; height: 100%; }
-                #chart { width: 100%; height: 100%; }
-            </style>
-            <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
-        </head>
-        <body>
-            <div id="chart"></div>
-            <script>
-                ${chartScript}
-            </script>
-        </body>
-        </html>
-    `);
-
+    await page.setContent(chartScript);
     await page.waitForSelector('#chart');
     const chart = await page.$('#chart');
     const screenshotPath = `./${symbol}-${indicatorType}.png`;
@@ -129,17 +209,17 @@ const generateChart = async (symbol, indicatorType, data) => {
     return screenshotPath;
 };
 
-const fetchStockDataFromAPI = async (symbol) => {
-    const response = await fetch(`http://127.0.0.1:5000/api/data/${symbol}`);
+const fetchStockDataFromAPI = async (symbol, period, interval) => {
+    const response = await fetch(`http://127.0.0.1:5000/api/data/${symbol}/${period}/${interval}`);
     const data = await response.json();
     return data;
 };
 
-app.get('/generate-chart/:symbol', async (req, res) => {
-    const symbol = req.params.symbol;
+app.get('/generate-chart/:symbol/:period/:interval', async (req, res) => {
+    const { symbol, period, interval } = req.params;
 
     try {
-        const stockData = await fetchStockDataFromAPI(symbol);
+        const stockData = await fetchStockDataFromAPI(symbol, period, interval);
 
         const chartData = stockData.map(entry => ({
             time: new Date(entry.Datetime).getTime() / 1000,
@@ -196,7 +276,6 @@ app.get('/generate-chart/:symbol', async (req, res) => {
         }));
 
         const candlestickPath = await generateChart(symbol, 'candlestick', chartData);
-        console.log(chartData)
         const volumePath = await generateChart(symbol, 'volume', volumeData);
         const atrPath = await generateChart(symbol, 'atr', atrData);
         const rsiPath = await generateChart(symbol, 'rsi', rsiData);
@@ -222,7 +301,7 @@ app.get('/generate-chart/:symbol', async (req, res) => {
         .toBuffer();
 
         // Write the combined image to a file
-        const combinedImagePath = `./combined-chart.png`;
+        const combinedImagePath = `./${symbol}-${interval}chart.png`;
         await fs.promises.writeFile(combinedImagePath, combinedImage);
 
         res.sendFile(combinedImagePath, { root: __dirname });

@@ -5,24 +5,27 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)
 
-def fetch_stock_data(ticker):
-    # Downloading the stock data using yfinance with a daily interval
-    data = yf.download(tickers=ticker, period="5d", interval="15m")
+def fetch_stock_data(ticker, period, interval):
+    # Downloading the stock data using yfinance with specified period and interval
+    data = yf.download(tickers=ticker, period=period, interval=interval)
     data.reset_index(inplace=True)
     
     # Check if 'Date' column is present, rename it to 'Datetime' if so
     if 'Date' in data.columns:
         data.rename(columns={'Date': 'Datetime'}, inplace=True)
-        data['Datetime'] = data['Datetime'].dt.strftime('%Y-%m-%d')
+        
+    # Convert 'Datetime' to ISO format
+    if 'Datetime' in data.columns:
+        data['Datetime'] = data['Datetime'].dt.strftime('%Y-%m-%dT%H:%M:%SZ')
     
     # Including volume in the formatted data
     formatted_data = data[['Datetime', 'Open', 'High', 'Low', 'Close', 'Volume']].to_dict(orient='records')
     return formatted_data
 
-@app.route('/api/data/<ticker>')
-def get_data(ticker):
-    # Fetching stock data
-    stock_data = fetch_stock_data(ticker)
+@app.route('/api/data/<ticker>/<period>/<interval>')
+def get_data(ticker, period, interval):
+    # Fetching stock data with specified period and interval
+    stock_data = fetch_stock_data(ticker, period, interval)
     # Returning JSON response
     return jsonify(stock_data)
 
