@@ -9,7 +9,7 @@ const fs = require('fs');
 const app = express();
 const port = 3000;
 
-const generateChart = async (symbol, indicatorType, data) => {
+const generateChart = async (symbol, indicatorType, data, interval) => {
     const browser = await puppeteer.launch({ headless: true });
     const page = await browser.newPage();
 
@@ -92,7 +92,7 @@ const generateChart = async (symbol, indicatorType, data) => {
                 <!DOCTYPE html>
                 <html>
                 <head>
-                    <title>ATR Chart</title>
+                    <title>ATR Chart (14)</title>
                     <style>
                         body, html { margin: 0; padding: 0; height: 100%; }
                         #chart { width: 100%; height: 100%; }
@@ -124,7 +124,7 @@ const generateChart = async (symbol, indicatorType, data) => {
                 <!DOCTYPE html>
                 <html>
                 <head>
-                    <title>RSI Chart</title>
+                    <title>RSI Chart (14)</title>
                     <style>
                         body, html { margin: 0; padding: 0; height: 100%; }
                         #chart { width: 100%; height: 100%; }
@@ -156,7 +156,7 @@ const generateChart = async (symbol, indicatorType, data) => {
                 <!DOCTYPE html>
                 <html>
                 <head>
-                    <title>MACD Chart</title>
+                    <title>MACD Chart (12, 26)</title>
                     <style>
                         body, html { margin: 0; padding: 0; height: 100%; }
                         #chart { width: 100%; height: 100%; }
@@ -202,7 +202,7 @@ const generateChart = async (symbol, indicatorType, data) => {
     await page.setContent(chartScript);
     await page.waitForSelector('#chart');
     const chart = await page.$('#chart');
-    const screenshotPath = `./${symbol}-${indicatorType}.png`;
+    const screenshotPath = `./${symbol}-${indicatorType}-${interval}_.png`;
     await chart.screenshot({ path: screenshotPath });
     await browser.close();
 
@@ -275,11 +275,11 @@ app.get('/generate-chart/:symbol/:period/:interval', async (req, res) => {
             value: atr[index]
         }));
 
-        const candlestickPath = await generateChart(symbol, 'candlestick', chartData);
-        const volumePath = await generateChart(symbol, 'volume', volumeData);
-        const atrPath = await generateChart(symbol, 'atr', atrData);
-        const rsiPath = await generateChart(symbol, 'rsi', rsiData);
-        const macdPath = await generateChart(symbol, 'macd', macdData);
+        const candlestickPath = await generateChart(symbol, 'candlestick', chartData, interval);
+        const volumePath = await generateChart(symbol, 'volume', volumeData, interval);
+        const atrPath = await generateChart(symbol, 'atr', atrData, interval);
+        const rsiPath = await generateChart(symbol, 'rsi', rsiData, interval);
+        const macdPath = await generateChart(symbol, 'macd', macdData, interval);
 
         // Combine images using sharp
         const combinedImage = await sharp({
