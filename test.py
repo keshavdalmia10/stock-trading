@@ -4,9 +4,9 @@ from tickerDataHelper import trigger_1d_1min, trigger_1d_15min, trigger_1d_5min,
 
 
 # Create three threads, each calling a different method with "ZOMATO.NS" as argument
-thread1 = threading.Thread(target=trigger_1d_1min, args=("RELIANCE.NS",))
-thread2 = threading.Thread(target=trigger_1d_15min, args=("RELIANCE.NS",))
-thread3 = threading.Thread(target=trigger_1d_5min, args=("RELIANCE.NS",))
+thread1 = threading.Thread(target=trigger_1d_1min, args=("ZOMATO.NS",))
+thread2 = threading.Thread(target=trigger_1d_15min, args=("ZOMATO.NS",))
+thread3 = threading.Thread(target=trigger_1d_5min, args=("ZOMATO.NS",))
 
 # Start all three threads
 thread1.start()

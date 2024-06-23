@@ -40,26 +40,23 @@ def calculate_pivot_points(data):
         "fibonacci": {"P": P, "S1": fS1, "S2": fS2, "S3": fS3, "R1": fR1, "R2": fR2, "R3": fR3}
     }
 
-
-    return {
-        "classic": {"P": P, "S1": S1, "S2": S2, "S3": S3, "R1": R1, "R2": R2, "R3": R3},
-        "fibonacci": {"P": P, "S1": fS1, "S2": fS2, "S3": fS3, "R1": fR1, "R2": fR2, "R3": fR3}
-    }
-
-@app.route('/api/data/<ticker>/<period>/<interval>')
-def get_data(ticker, period, interval):
-    stock_data = fetch_stock_data(ticker, period, interval)
-    return jsonify(stock_data)
-
 @app.route('/api/pivot/<ticker>/<period>/<interval>')
 def get_pivot_data(ticker, period, interval):
     stock_data = fetch_stock_data(ticker, period, interval)
     if not stock_data:
         return jsonify({"error": "No data found"}), 404
 
-    # Use the last entry in the list of data dictionaries for pivot point calculation
-    pivot_points = calculate_pivot_points(stock_data[-1])  # Last entry is used directly
-    return jsonify(pivot_points)
+    pivot_points = calculate_pivot_points(stock_data[-1])  
+    pivot_response = {
+        "interval": interval,
+        "period": period,
+        "pivot_points": {
+            "classic": pivot_points['classic'],
+            "fibonacci": pivot_points['fibonacci']
+        }
+    }
+    return jsonify(pivot_response)
+
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
