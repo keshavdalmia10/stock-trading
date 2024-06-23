@@ -210,7 +210,7 @@ const generateChart = async (symbol, indicatorType, data, interval) => {
 };
 
 const fetchStockDataFromAPI = async (symbol, period, interval) => {
-    const response = await fetch(`http://127.0.0.1:5000/api/data/${symbol}/${period}/${interval}`);
+    const response = await fetch(`http://127.0.0.1:8000/api/data/${symbol}/${period}/${interval}`);
     const data = await response.json();
     return data;
 };
@@ -239,36 +239,12 @@ app.get('/generate-chart/:symbol/:period/:interval', async (req, res) => {
         const lows = stockData.map(entry => entry.Low);
 
         const rsi = RSI.calculate({ values: closes, period: 14 });
-        const macd = MACD.calculate({
-            values: closes,
-            fastPeriod: 12,
-            slowPeriod: 26,
-            signalPeriod: 9,
-            SimpleMAOscillator: false,
-            SimpleMASignal: false
-        });
         const atr = ATR.calculate({ high: highs, low: lows, close: closes, period: 14 });
 
         const rsiData = chartData.slice(14).map((entry, index) => ({
             time: entry.time,
             value: rsi[index]
         }));
-
-        const macdData = {
-            macdLine: chartData.slice(26).map((entry, index) => ({
-                time: entry.time,
-                value: macd[index].MACD
-            })),
-            signalLine: chartData.slice(26).map((entry, index) => ({
-                time: entry.time,
-                value: macd[index].signal
-            })),
-            histogram: chartData.slice(26).map((entry, index) => ({
-                time: entry.time,
-                value: macd[index].histogram,
-                color: macd[index].histogram >= 0 ? 'rgba(0, 150, 136, 0.5)' : 'rgba(255, 0, 0, 0.5)'
-            }))
-        };
 
         const atrData = chartData.slice(14).map((entry, index) => ({
             time: entry.time,
@@ -279,31 +255,70 @@ app.get('/generate-chart/:symbol/:period/:interval', async (req, res) => {
         const volumePath = await generateChart(symbol, 'volume', volumeData, interval);
         const atrPath = await generateChart(symbol, 'atr', atrData, interval);
         const rsiPath = await generateChart(symbol, 'rsi', rsiData, interval);
-        const macdPath = await generateChart(symbol, 'macd', macdData, interval);
 
-        // Combine images using sharp
-        const combinedImage = await sharp({
-            create: {
-                width: 800,
-                height: 1500,
-                channels: 4,
-                background: { r: 255, g: 255, b: 255, alpha: 1 }
-            }
-        })
-        .composite([
+        let macdPath;
+        let macdData;
+
+        if (!(interval === '15m' && period === '1d')) {
+            const macd = MACD.calculate({
+                values: closes,
+                fastPeriod: 12,
+                slowPeriod: 26,
+                signalPeriod: 9,
+                SimpleMAOscillator: false,
+                SimpleMASignal: false
+            });
+
+            macdData = {
+                macdLine: chartData.slice(26).map((entry, index) => ({
+                    time: entry.time,
+                    value: macd[index].MACD
+                })),
+                signalLine: chartData.slice(26).map((entry, index) => ({
+                    time: entry.time,
+                    value: macd[index].signal
+                })),
+                histogram: chartData.slice(26).map((entry, index) => ({
+                    time: entry.time,
+                    value: macd[index].histogram,
+                    color: macd[index].histogram >= 0 ? 'rgba(0, 150, 136, 0.5)' : 'rgba(255, 0, 0, 0.5)'
+                }))
+            };
+
+            macdPath = await generateChart(symbol, 'macd', macdData, interval);
+        }
+
+        // Composite images conditionally
+        let compositeElements = [
             { input: candlestickPath, top: 0, left: 0 },
             { input: volumePath, top: 300, left: 0 },
             { input: atrPath, top: 600, left: 0 },
             { input: rsiPath, top: 900, left: 0 },
-            { input: macdPath, top: 1200, left: 0 }
-        ])
+        ];
+
+        let currentHeight = 1200;
+        if (macdPath) {
+            compositeElements.push({ input: macdPath, top: currentHeight, left: 0 });
+            currentHeight += 300;
+        }
+
+        const combinedImage = await sharp({
+            create: {
+                width: 800,
+                height: currentHeight,
+                channels: 4,
+                background: { r: 255, g: 255, b: 255, alpha: 1 }
+            }
+        })
+        .composite(compositeElements)
         .png()
         .toBuffer();
 
         // Write the combined image to a file
-        const combinedImagePath = `./${symbol}-${interval}chart.png`;
+        const combinedImagePath = `./${symbol}-${interval}-chart.png`;
         await fs.promises.writeFile(combinedImagePath, combinedImage);
-        const filesToDelete = [candlestickPath, volumePath, atrPath, rsiPath, macdPath];
+        const filesToDelete = [candlestickPath, volumePath, atrPath, rsiPath];
+        if (macdPath) filesToDelete.push(macdPath);
         await Promise.all(filesToDelete.map(file => fs.promises.unlink(file)));
         res.sendFile(combinedImagePath, { root: __dirname });
     } catch (error) {
