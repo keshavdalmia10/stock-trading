@@ -6,29 +6,60 @@ app = Flask(__name__)
 CORS(app)
 
 def fetch_stock_data(ticker, period, interval):
-    # Downloading the stock data using yfinance with specified period and interval
     data = yf.download(tickers=ticker, period=period, interval=interval)
     data.reset_index(inplace=True)
-    
-    # Check if 'Date' column is present, rename it to 'Datetime' if so
     if 'Date' in data.columns:
         data.rename(columns={'Date': 'Datetime'}, inplace=True)
-        
-    # Convert 'Datetime' to ISO format
     if 'Datetime' in data.columns:
         data['Datetime'] = data['Datetime'].dt.strftime('%Y-%m-%dT%H:%M:%SZ')
-    
-    # Including volume in the formatted data
     formatted_data = data[['Datetime', 'Open', 'High', 'Low', 'Close', 'Volume']].to_dict(orient='records')
     return formatted_data
 
+def calculate_pivot_points(data):
+    high = data['High']
+    low = data['Low']
+    close = data['Close']
+
+    P = (high + low + close) / 3
+    R1 = 2 * P - low
+    S1 = 2 * P - high
+    R2 = P + (high - low)
+    S2 = P - (high - low)
+    R3 = high + 2 * (P - low)
+    S3 = low - 2 * (high - P)
+
+    fR1 = P + 0.382 * (high - low)
+    fS1 = P - 0.382 * (high - low)
+    fR2 = P + 0.618 * (high - low)
+    fS2 = P - 0.618 * (high - low)
+    fR3 = P + (high - low)
+    fS3 = P - (high - low)
+
+    return {
+        "classic": {"P": P, "S1": S1, "S2": S2, "S3": S3, "R1": R1, "R2": R2, "R3": R3},
+        "fibonacci": {"P": P, "S1": fS1, "S2": fS2, "S3": fS3, "R1": fR1, "R2": fR2, "R3": fR3}
+    }
+
+
+    return {
+        "classic": {"P": P, "S1": S1, "S2": S2, "S3": S3, "R1": R1, "R2": R2, "R3": R3},
+        "fibonacci": {"P": P, "S1": fS1, "S2": fS2, "S3": fS3, "R1": fR1, "R2": fR2, "R3": fR3}
+    }
+
 @app.route('/api/data/<ticker>/<period>/<interval>')
 def get_data(ticker, period, interval):
-    # Fetching stock data with specified period and interval
     stock_data = fetch_stock_data(ticker, period, interval)
-    # Returning JSON response
     return jsonify(stock_data)
 
+@app.route('/api/pivot/<ticker>/<period>/<interval>')
+def get_pivot_data(ticker, period, interval):
+    stock_data = fetch_stock_data(ticker, period, interval)
+    if not stock_data:
+        return jsonify({"error": "No data found"}), 404
+
+    # Use the last entry in the list of data dictionaries for pivot point calculation
+    pivot_points = calculate_pivot_points(stock_data[-1])  # Last entry is used directly
+    return jsonify(pivot_points)
+
 if __name__ == '__main__':
-    # Run the Flask app on port 5000
     app.run(debug=True, port=5000)
