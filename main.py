@@ -4,7 +4,7 @@ from payload import Payload
 from model import Model
 import ai as AI
 from tickerDataHelper import get_Classic_Fibonacci, trigger_1d_5min, getTickerImagePath
-
+import json
 
 # Example usage:
 # text_content = Content(content_type= ContentType.TEXT, value="Analyze the image")
@@ -17,14 +17,14 @@ from tickerDataHelper import get_Classic_Fibonacci, trigger_1d_5min, getTickerIm
 # answer = AI.getResponse(payload=payload.getJson())
 # print(answer)
 stockname = "ZOMATO.NS"
-a = get_Classic_Fibonacci("RELIANCE.NS", "1d", "5m")
+fibonaci = get_Classic_Fibonacci("RELIANCE.NS", "1d", "5m")
 
-trigger_1d_5min(stockname)
-image_path = getTickerImagePath(stockname, "5m")
-text_content = Content(content_type= ContentType.TEXT, value=f'Please analyze the candlestick chart and additional indicators shown in the image for the stock {stockname}. Focus specifically on intraday trading patterns.e')
-image_content = Content(content_type=ContentType.IMAGE_URL, value=image_path)
-message = Message(role=Role.USER, content=[text_content, image_content])
+# print(fibonaci)
+text_content = Content(content_type=ContentType.TEXT, value = "Analyze the json")
+f_content = Content(content_type=ContentType.TEXT, value = json.dumps())
+message = Message(role=Role.USER, content=[text_content,f_content])
 payload = Payload(model=Model.GPT4o, messages=[message])
+print(payload.getJson())
 answer = AI.getResponse(payload=payload.getJson())
 print(answer)
 

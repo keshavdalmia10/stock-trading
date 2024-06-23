@@ -1,6 +1,6 @@
-import base64
 import requests
-
+from content import Content, ContentType
+from message import Message, Role
 
 api_key = "sk-proj-BE8OgmDpTABgJJpmnWhIT3BlbkFJwgm7Zt9jYa6wyGacJVx4"
 
@@ -15,7 +15,13 @@ def getResponse(payload):
     if response.status_code == 200:
       response_data = response.json()
       answer = response_data['choices'][0]['message']['content']
+      print(answer)
       return answer
     
     else:
       print(f"Request failed with status code {response.status_code}: {response.text}")
+
+def convert_airesponse_toMessage(response):
+   text_content = Content(content_type=ContentType.TEXT, value = response)
+   message = Message(role=Role.SYSTEM, content=[text_content])
+   return message
