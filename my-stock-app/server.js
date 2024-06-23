@@ -1,4 +1,3 @@
-// JavaScript (Express) part
 const express = require('express');
 const puppeteer = require('puppeteer');
 const fetch = require('node-fetch');
@@ -20,6 +19,10 @@ const generateChart = async (symbol, indicatorType, data, interval) => {
         return date.toLocaleDateString();
     };
 
+    const getWatermarkText = (baseText) => {
+        return `${baseText} - ${interval}`;
+    };
+
     switch (indicatorType) {
         case 'candlestick':
             chartScript = `
@@ -39,7 +42,7 @@ const generateChart = async (symbol, indicatorType, data, interval) => {
                         const chart = LightweightCharts.createChart(document.getElementById('chart'), { width: 800, height: 300 });
                         chart.applyOptions({
                             layout: { textColor: '#000' },
-                            watermark: { color: 'blue', visible: true, text: 'Candlestick', fontSize: 24, horzAlign: 'left', vertAlign: 'top' },
+                            watermark: { color: 'blue', visible: true, text: '${getWatermarkText("Candlestick")}', fontSize: 24, horzAlign: 'left', vertAlign: 'top' },
                             timeScale: { timeVisible: true, timeFormatter: ${formatTime.toString()} }
                         });
                         const candleSeries = chart.addCandlestickSeries();
@@ -67,7 +70,7 @@ const generateChart = async (symbol, indicatorType, data, interval) => {
                         const chart = LightweightCharts.createChart(document.getElementById('chart'), { width: 800, height: 300 });
                         chart.applyOptions({
                             layout: { textColor: '#000' },
-                            watermark: { color: 'green', visible: true, text: 'Volume', fontSize: 24, horzAlign: 'left', vertAlign: 'top' },
+                            watermark: { color: 'green', visible: true, text: '${getWatermarkText("Volume")}', fontSize: 24, horzAlign: 'left', vertAlign: 'top' },
                             timeScale: { timeVisible: true, timeFormatter: ${formatTime.toString()} }
                         });
                         const volumeSeries = chart.addHistogramSeries({
@@ -105,7 +108,7 @@ const generateChart = async (symbol, indicatorType, data, interval) => {
                         const chart = LightweightCharts.createChart(document.getElementById('chart'), { width: 800, height: 300 });
                         chart.applyOptions({
                             layout: { textColor: '#000' },
-                            watermark: { color: 'red', visible: true, text: 'ATR', fontSize: 24, horzAlign: 'left', vertAlign: 'top' },
+                            watermark: { color: 'red', visible: true, text: '${getWatermarkText("ATR")}', fontSize: 24, horzAlign: 'left', vertAlign: 'top' },
                             timeScale: { timeVisible: true, timeFormatter: ${formatTime.toString()} }
                         });
                         const atrSeries = chart.addLineSeries({
@@ -137,7 +140,7 @@ const generateChart = async (symbol, indicatorType, data, interval) => {
                         const chart = LightweightCharts.createChart(document.getElementById('chart'), { width: 800, height: 300 });
                         chart.applyOptions({
                             layout: { textColor: '#000' },
-                            watermark: { color: 'purple', visible: true, text: 'RSI', fontSize: 24, horzAlign: 'left', vertAlign: 'top' },
+                            watermark: { color: 'purple', visible: true, text: '${getWatermarkText("RSI")}', fontSize: 24, horzAlign: 'left', vertAlign: 'top' },
                             timeScale: { timeVisible: true, timeFormatter: ${formatTime.toString()} }
                         });
                         const rsiSeries = chart.addLineSeries({
@@ -169,7 +172,7 @@ const generateChart = async (symbol, indicatorType, data, interval) => {
                         const chart = LightweightCharts.createChart(document.getElementById('chart'), { width: 800, height: 300 });
                         chart.applyOptions({
                             layout: { textColor: '#000' },
-                            watermark: { color: 'blue', visible: true, text: 'MACD', fontSize: 24, horzAlign: 'left', vertAlign: 'top' },
+                            watermark: { color: 'blue', visible: true, text: '${getWatermarkText("MACD")}', fontSize: 24, horzAlign: 'left', vertAlign: 'top' },
                             timeScale: { timeVisible: true, timeFormatter: ${formatTime.toString()} }
                         });
                         const macdLineSeries = chart.addLineSeries({
@@ -202,7 +205,7 @@ const generateChart = async (symbol, indicatorType, data, interval) => {
     await page.setContent(chartScript);
     await page.waitForSelector('#chart');
     const chart = await page.$('#chart');
-    const screenshotPath = `./${symbol}-${indicatorType}-${interval}_.png`;
+    const screenshotPath = `./${symbol}-${indicatorType}-${interval}.png`;
     await chart.screenshot({ path: screenshotPath });
     await browser.close();
 
