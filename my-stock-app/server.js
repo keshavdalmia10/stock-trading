@@ -303,7 +303,8 @@ app.get('/generate-chart/:symbol/:period/:interval', async (req, res) => {
         // Write the combined image to a file
         const combinedImagePath = `./${symbol}-${interval}chart.png`;
         await fs.promises.writeFile(combinedImagePath, combinedImage);
-
+        const filesToDelete = [candlestickPath, volumePath, atrPath, rsiPath, macdPath];
+        await Promise.all(filesToDelete.map(file => fs.promises.unlink(file)));
         res.sendFile(combinedImagePath, { root: __dirname });
     } catch (error) {
         console.error('Failed to fetch data or generate chart:', error);
