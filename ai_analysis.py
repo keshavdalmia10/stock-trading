@@ -12,14 +12,14 @@ from multithreading import generate_all_charts_for_stock
 
 def imageanalysis(stock : Stock):
     stockname = stock.stock_name
-    
+
     generate_all_charts_for_stock(stockname)
     
     image_path_5d_60min = tickerHelper.getTickerImagePath(stockname, "60m")
     image_path_15min = tickerHelper.getTickerImagePath(stockname, "15m")
     image_path_5min = tickerHelper.getTickerImagePath(stockname, "5m")
 
-    initial_image_analysis_text = Content(content_type= ContentType.TEXT, value=PrompText.INITIAL_IMAGE_ANALYSIS.format(tickername = stockname))
+    initial_image_analysis_text = Content(content_type= ContentType.TEXT, value=PrompText.INITIAL_IMAGE_ANALYSIS.value)
     image_5d_60min = Content(content_type=ContentType.IMAGE_URL, value= image_path_5d_60min)
     image_15min = Content(content_type=ContentType.IMAGE_URL, value= image_path_15min)
     image_5min = Content(content_type=ContentType.IMAGE_URL, value= image_path_5min)
@@ -89,9 +89,43 @@ def tradingStrategy(stock : Stock):
     converted_ai_message = AI.convert_airesponse_toMessage(answer)
 
     stock.add_in_history(converted_ai_message)
+
+def all_in_one(stock : Stock):
+    #json analysis
+    fibonacciString30min = tickerHelper.get_Classic_Fibonacci(stock.stock_name, "1d", "30m")
+
+    json_analysis_text = Content(content_type= ContentType.TEXT, value=PrompText.JSON_ANALYSIS.value)
+
+    json_text30min = Content(content_type=ContentType.TEXT, value= json.dumps(fibonacciString30min))
+
+    json_message = Message(role=Role.USER, content=[json_analysis_text, json_text30min])
+    stock.add_in_history(json_message)
+
+    #indicator analysis
+    indicator_analysis_text = Content(content_type= ContentType.TEXT, value=PrompText.INDICATOR_ANALYSIS.value)
+    indicator_message = Message(role=Role.USER, content=[indicator_analysis_text])
+
+    stock.add_in_history(indicator_message)
+
+    #trading stategy
+    trading_strategy_text = Content(content_type= ContentType.TEXT, value=PrompText.TRADING_STRATEGY.value)
+    trading_message = Message(role=Role.USER, content=[trading_strategy_text])
+
+    stock.add_in_history(trading_message)
+
+    #sending payload
+
+    payload = Payload(model=Model.GPT4, messages= stock.message_history)
+
+    answer = AI.getResponse(payload=payload.getJson())
+    
     
 def fullAnalysis(stock : Stock):
     imageanalysis(stock)
     jsonAnalysis(stock)
     indicatorAnalysis(stock)
     tradingStrategy(stock)
+
+def optimized_full_analysis(stock : Stock):
+    imageanalysis(stock)
+    all_in_one(stock)
