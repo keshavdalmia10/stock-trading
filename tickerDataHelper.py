@@ -24,33 +24,39 @@ def get_Classic_Fibonacci(symbol, timeframe, interval):
         print(f"Failed to get response. Status code: {response.status_code}")
 
 def trigger_1d_5min(stockname):
-    deleteImageIfExist(stockname, "5m")
-    image_generated = constructTickerImages(symbol=stockname, timeframe="1d", interval="5m")
+    interval = "5m"
+    timeperiod = "1d"
+    deleteImageIfExist(stockname, interval)
+    image_generated = constructTickerImages(symbol=stockname, timeframe=timeperiod, interval=interval)
     
     if(image_generated):
-        print("Images succesfully generated")
+        print(f"Images succesfully generated for {interval}")
     else:
-        print("Images didn't generate")
+        print(f"Images didn't generate for {timeperiod} {interval}")
 
 
 def trigger_1d_15min(stockname):
+    interval = "15m"
+    timeperiod = "1d"
     deleteImageIfExist(stockname, "15m")
-    image_generated = constructTickerImages(symbol=stockname, timeframe="1d", interval="15m")
+    image_generated = constructTickerImages(symbol=stockname, timeframe=timeperiod, interval=interval)
     
     if(image_generated):
-        print("Images succesfully generated")
+        print(f"Images succesfully generated for {interval}")
     else:
-        print("Images didn't generate")
+        print(f"Images didn't generate for {timeperiod} {interval}")
 
 
-def trigger_1d_1min(stockname):
-    deleteImageIfExist(stockname, "1m")
-    image_generated = constructTickerImages(symbol=stockname, timeframe="1d", interval="1m")
+def trigger_5d_60min(stockname):
+    interval = "60m"
+    timeperiod = "5d"
+    deleteImageIfExist(stockname, "60m")
+    image_generated = constructTickerImages(symbol=stockname, timeframe=timeperiod, interval=interval)
     
     if(image_generated):
-        print("Images succesfully generated")
+        print(f"Images succesfully generated for {interval}")
     else:
-        print("Images didn't generate")
+        print(f"Images didn't generate for {timeperiod} {interval}")
 
 def getTickerImagePath(stockname, interval):
     image_file_name = f'{stockname}-{interval}-chart.png'

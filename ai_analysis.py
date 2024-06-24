@@ -8,25 +8,29 @@ import ai as AI
 from stock import Stock
 import tickerDataHelper as tickerHelper
 import json
+from multithreading import generate_all_charts_for_stock
 
 def imageanalysis(stock : Stock):
     stockname = stock.stock_name
     tickerHelper.trigger_1d_15min(stockname)
     tickerHelper.trigger_1d_5min(stockname)
-    tickerHelper.trigger_1d_1min(stockname)
+    tickerHelper.trigger_5d_60min(stockname)
     
-    image_path_1min = tickerHelper.getTickerImagePath(stockname, "1m")
+    image_path_5d_60min = tickerHelper.getTickerImagePath(stockname, "60m")
     image_path_15min = tickerHelper.getTickerImagePath(stockname, "15m")
     image_path_5min = tickerHelper.getTickerImagePath(stockname, "5m")
 
     initial_image_analysis_text = Content(content_type= ContentType.TEXT, value=PrompText.INITIAL_IMAGE_ANALYSIS.format(tickername = stockname))
-    image_1min = Content(content_type=ContentType.IMAGE_URL, value= image_path_1min)
+    image_5d_60min = Content(content_type=ContentType.IMAGE_URL, value= image_path_5d_60min)
     image_15min = Content(content_type=ContentType.IMAGE_URL, value= image_path_15min)
     image_5min = Content(content_type=ContentType.IMAGE_URL, value= image_path_5min)
 
-    message = Message(role=Role.USER, content=[initial_image_analysis_text, image_1min, image_15min, image_5min])
-    stock.add_in_history(message)
-    payload = Payload(model=Model.GPT4o, messages=stock.message_history)
+    message = Message(role=Role.USER, content=[initial_image_analysis_text, image_5d_60min, image_15min, image_5min])
+    
+    transformed_message = Message(role=Role.USER, content=[initial_image_analysis_text])
+
+    stock.add_in_history(transformed_message)
+    payload = Payload(model=Model.GPT4o, messages=[message])
     answer = AI.getResponse(payload=payload.getJson())
     stock.image_analysis = answer
     
@@ -36,20 +40,16 @@ def imageanalysis(stock : Stock):
     
 
 def jsonAnalysis(stock : Stock):
-    jsonString1m = tickerHelper.get_Classic_Fibonacci(stock.stock_name, "1d", "1m")
-    jsonString5m = tickerHelper.get_Classic_Fibonacci(stock.stock_name, "1d", "5m")
-    jsonString15m = tickerHelper.get_Classic_Fibonacci(stock.stock_name, "1d", "15m")
+    fibonacciString30min = tickerHelper.get_Classic_Fibonacci(stock.stock_name, "1d", "30m")
 
     json_analysis_text = Content(content_type= ContentType.TEXT, value=PrompText.JSON_ANALYSIS.value)
 
-    json_text1min = Content(content_type=ContentType.TEXT, value= json.dumps(jsonString1m))
-    json_text15min = Content(content_type=ContentType.TEXT, value= json.dumps(jsonString15m))
-    json_text5min = Content(content_type=ContentType.TEXT, value= json.dumps(jsonString5m))
+    json_text30min = Content(content_type=ContentType.TEXT, value= json.dumps(fibonacciString30min))
 
-    message = Message(role=Role.USER, content=[json_analysis_text, json_text1min, json_text15min, json_text5min])
+    message = Message(role=Role.USER, content=[json_analysis_text, json_text30min])
     stock.add_in_history(message)
 
-    payload = Payload(model=Model.GPT4o, messages= stock.message_history)
+    payload = Payload(model=Model.GPT4, messages= stock.message_history)
 
     answer = AI.getResponse(payload=payload.getJson())
 
@@ -65,7 +65,7 @@ def indicatorAnalysis(stock : Stock):
 
     stock.add_in_history(message)
 
-    payload = Payload(model=Model.GPT4o, messages= stock.message_history)
+    payload = Payload(model=Model.GPT4, messages= stock.message_history)
 
     answer = AI.getResponse(payload=payload.getJson())
 
@@ -81,7 +81,7 @@ def tradingStrategy(stock : Stock):
 
     stock.add_in_history(message)
 
-    payload = Payload(model=Model.GPT4o, messages= stock.message_history)
+    payload = Payload(model=Model.GPT4, messages= stock.message_history)
 
     answer = AI.getResponse(payload=payload.getJson())
 
