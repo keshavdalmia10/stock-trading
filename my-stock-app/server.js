@@ -213,7 +213,7 @@ const generateChart = async (symbol, indicatorType, data, interval) => {
 };
 
 const fetchStockDataFromAPI = async (symbol, period, interval) => {
-    const response = await fetch(`http://127.0.0.1:8000/api/data/${symbol}/${period}/${interval}`);
+    const response = await fetch(`https://stock-trading-flask-13fc31362bcf.herokuapp.com/api/data/${symbol}/${period}/${interval}`);
     const data = await response.json();
     return data;
 };

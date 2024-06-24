@@ -12,9 +12,8 @@ from multithreading import generate_all_charts_for_stock
 
 def imageanalysis(stock : Stock):
     stockname = stock.stock_name
-    tickerHelper.trigger_1d_15min(stockname)
-    tickerHelper.trigger_1d_5min(stockname)
-    tickerHelper.trigger_5d_60min(stockname)
+    
+    generate_all_charts_for_stock(stockname)
     
     image_path_5d_60min = tickerHelper.getTickerImagePath(stockname, "60m")
     image_path_15min = tickerHelper.getTickerImagePath(stockname, "15m")

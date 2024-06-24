@@ -16,6 +16,6 @@ def generate_all_charts_for_stock(stockname):
     thread2.join()
     thread3.join()
 
-print("All threads have finished.")
+    print("All threads have finished.")
 
 
