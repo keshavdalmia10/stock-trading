@@ -18,13 +18,14 @@ import json
 # print(answer)
 stockname = "ZOMATO.NS"
 fibonaci = get_Classic_Fibonacci("RELIANCE.NS", "1d", "5m")
-
+fibonaci_text = json.dumps(fibonaci)
+# print(type(json.dumps(fibonaci)))
 # print(fibonaci)
-text_content = Content(content_type=ContentType.TEXT, value = "Analyze the json")
-f_content = Content(content_type=ContentType.TEXT, value = json.dumps())
+text_content = Content(content_type=ContentType.TEXT, value = """Analyze the json data of a stock and provide answer in JSON structure like this {"title": {},"answer": {}}""")
+f_content = Content(content_type=ContentType.TEXT, value = fibonaci_text)
 message = Message(role=Role.USER, content=[text_content,f_content])
 payload = Payload(model=Model.GPT4o, messages=[message])
-print(payload.getJson())
+# print(payload.getJson())
 answer = AI.getResponse(payload=payload.getJson())
-print(answer)
+# print(answer)
 

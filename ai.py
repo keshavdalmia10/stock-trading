@@ -15,7 +15,6 @@ def getResponse(payload):
     if response.status_code == 200:
       response_data = response.json()
       answer = response_data['choices'][0]['message']['content']
-      print(answer)
       return answer
     
     else:

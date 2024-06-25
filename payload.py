@@ -16,6 +16,7 @@ class Payload:
     def to_dict(self):
         return {
             'model': self.model.value,
+            'response_format':{"type":"json_object"},
             'messages': [m.to_dict() for m in self.messages]
         }
     

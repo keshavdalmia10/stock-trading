@@ -120,12 +120,44 @@ def all_in_one(stock : Stock):
     answer = AI.getResponse(payload=payload.getJson())
     
     
-def fullAnalysis(stock : Stock):
+def chained_analysis(stock : Stock):
     imageanalysis(stock)
     jsonAnalysis(stock)
     indicatorAnalysis(stock)
     tradingStrategy(stock)
 
-def optimized_full_analysis(stock : Stock):
+def two_chain_analysis(stock : Stock):
     imageanalysis(stock)
     all_in_one(stock)
+
+def all_in_one(stock : Stock):
+    stock_name = stock.stock_name
+    fibonacciString30min = tickerHelper.get_Classic_Fibonacci(stock.stock_name, "1d", "30m")
+
+    system_text = Content(content_type= ContentType.TEXT, value=PrompText.SYSTEM_PROMPT.value)
+    system_message = Message(role=Role.SYSTEM, content=[system_text])
+
+    initial_user_text = Content(content_type= ContentType.TEXT, value=PrompText.USER_QUESTION.value)
+    example_user_message = Message(role=Role.USER, content=[initial_user_text])
+
+    assistant_response_text = Content(content_type= ContentType.TEXT, value=PrompText.ASSISTANT_ANSWER.value)
+    example_assistant_message = Message(role=Role.ASSISTANT, content=[assistant_response_text])
+
+
+    generate_all_charts_for_stock(stock_name)
+    image_path_5d_60min = tickerHelper.getTickerImagePath(stock_name, "60m")
+    image_path_15min = tickerHelper.getTickerImagePath(stock_name, "15m")
+    image_path_5min = tickerHelper.getTickerImagePath(stock_name, "5m")
+    image_5d_60min = Content(content_type=ContentType.IMAGE_URL, value= image_path_5d_60min)
+    image_15min = Content(content_type=ContentType.IMAGE_URL, value= image_path_15min)
+    image_5min = Content(content_type=ContentType.IMAGE_URL, value= image_path_5min)
+
+
+    user_prompt_text = Content(content_type= ContentType.TEXT, value=PrompText.USER_PROMPT.format(stockname = stock_name, fibonaci_json = fibonacciString30min))
+    user_message = Message(role=Role.USER, content=[image_5d_60min, image_15min, image_5min, user_prompt_text])
+
+    payload = Payload(model=Model.GPT4o, messages= [system_message, example_user_message, example_assistant_message, user_message])
+    
+    answer = AI.getResponse(payload=payload.getJson())
+
+    stock.trading_strategy = answer

@@ -3,4 +3,4 @@ class AnalyzableStock(Stock):
     
     def analyse(self):
         import ai_analysis
-        ai_analysis.fullAnalysis(self)
+        ai_analysis.all_in_one(self)
