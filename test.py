@@ -14,6 +14,11 @@ print(f'stock stop loss : {stock.stop_loss}')
 print(f'stock target point : {stock.target_point}')
 print(f'stock analysis : {stock.analysis}')
 print(f'stock rating : {stock.rating}')
+
+# a = tickerHelper.get_stock_data("RELIANCE.NS", "1d", "5m")
+# print(type(a.json()))
+# print(a.json())
+
 # stock.analyse()
 # stock.analyse()
 # print(stock.trading_strategy)

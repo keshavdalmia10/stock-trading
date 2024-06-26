@@ -3,6 +3,7 @@ import os
 
 generate_chart_url = "http://localhost:3000/generate-chart"
 fibonaci_classic_url = "http://127.0.0.1:8000/api/pivot"
+stock_data_url = "https://stock-trading-flask-13fc31362bcf.herokuapp.com/api/data"
 
 def constructTickerImages(symbol, timeframe, interval) -> bool:
     url = f"{generate_chart_url}/{symbol}/{timeframe}/{interval}"
@@ -14,6 +15,13 @@ def constructTickerImages(symbol, timeframe, interval) -> bool:
         print(f"Failed to get response. Status code: {response.status_code}")
         return False
     
+def get_stock_data(symbol, timeframe, interval):
+    url = f"{stock_data_url}/{symbol}/{timeframe}/{interval}" 
+    response = requests.get(url)
+    if response.status_code == 200:
+        return response.json()
+
+
 def get_Classic_Fibonacci(symbol, timeframe, interval):
     url = f"{fibonaci_classic_url}/{symbol}/{timeframe}/{interval}"
     response = requests.get(url)
