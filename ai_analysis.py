@@ -9,6 +9,7 @@ from stock import Stock
 import tickerDataHelper as tickerHelper
 import json
 from multithreading import generate_all_charts_for_stock
+import json
 
 def imageanalysis(stock : Stock):
     stockname = stock.stock_name
@@ -90,35 +91,6 @@ def tradingStrategy(stock : Stock):
 
     stock.add_in_history(converted_ai_message)
 
-def all_in_one(stock : Stock):
-    #json analysis
-    fibonacciString30min = tickerHelper.get_Classic_Fibonacci(stock.stock_name, "1d", "30m")
-
-    json_analysis_text = Content(content_type= ContentType.TEXT, value=PrompText.JSON_ANALYSIS.value)
-
-    json_text30min = Content(content_type=ContentType.TEXT, value= json.dumps(fibonacciString30min))
-
-    json_message = Message(role=Role.USER, content=[json_analysis_text, json_text30min])
-    stock.add_in_history(json_message)
-
-    #indicator analysis
-    indicator_analysis_text = Content(content_type= ContentType.TEXT, value=PrompText.INDICATOR_ANALYSIS.value)
-    indicator_message = Message(role=Role.USER, content=[indicator_analysis_text])
-
-    stock.add_in_history(indicator_message)
-
-    #trading stategy
-    trading_strategy_text = Content(content_type= ContentType.TEXT, value=PrompText.TRADING_STRATEGY.value)
-    trading_message = Message(role=Role.USER, content=[trading_strategy_text])
-
-    stock.add_in_history(trading_message)
-
-    #sending payload
-
-    payload = Payload(model=Model.GPT4, messages= stock.message_history)
-
-    answer = AI.getResponse(payload=payload.getJson())
-    
     
 def chained_analysis(stock : Stock):
     imageanalysis(stock)
@@ -159,5 +131,5 @@ def all_in_one(stock : Stock):
     payload = Payload(model=Model.GPT4o, messages= [system_message, example_user_message, example_assistant_message, user_message])
     
     answer = AI.getResponse(payload=payload.getJson())
-
-    stock.trading_strategy = answer
+    
+    stock.writejson(answer)
