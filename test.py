@@ -4,16 +4,21 @@ from prompt import PrompText
 import tickerDataHelper as tickerHelper
 from content import Content, ContentType
 import json
+import trader as trader
 
 import ai_analysis
-#Uncomment below line to analyze a stock
-stock = AnalyzableStock("ZOMATO.NS")
-stock.analyse()
-print(f'stock entry point : {stock.entry_point}')
-print(f'stock stop loss : {stock.stop_loss}')
-print(f'stock target point : {stock.target_point}')
-print(f'stock analysis : {stock.analysis}')
-print(f'stock rating : {stock.rating}')
+#Check multithreading
+stocklist = ["ZOMATO.NS", "RELIANCE.NS", "PNB.NS"]
+trader.trade_stocks(stocklist)
+
+#Check if variables are being assigned properly
+# stock = AnalyzableStock("ZOMATO.NS")
+# stock.analyse()
+# print(f'stock entry point : {stock.entry_point}')
+# print(f'stock stop loss : {stock.stop_loss}')
+# print(f'stock target point : {stock.target_point}')
+# print(f'stock analysis : {stock.analysis}')
+# print(f'stock rating : {stock.rating}')
 
 # a = tickerHelper.get_stock_data("RELIANCE.NS", "1d", "5m")
 # print(type(a.json()))
@@ -34,3 +39,9 @@ print(f'stock rating : {stock.rating}')
 # stock_name = "relaince"
 
 # print(PrompText.USER_PROMPT.format(stockname = stock_name, fibonaci_json = fibonacciString30min))
+# stock1 = AnalyzableStock("stock1")
+# stock1.testwrite("Rowdy")
+# stock2 = AnalyzableStock("stock2")
+# stock2.testwrite("Anyting")
+# print(stock1.analysis)
+# print(stock2.analysis)

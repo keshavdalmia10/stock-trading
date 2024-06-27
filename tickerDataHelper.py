@@ -2,7 +2,7 @@ import requests
 import os
 
 generate_chart_url = "http://localhost:3000/generate-chart"
-fibonaci_classic_url = "http://127.0.0.1:8000/api/pivot"
+fibonaci_classic_url = "https://stock-trading-flask-13fc31362bcf.herokuapp.com/api/pivot"
 stock_data_url = "https://stock-trading-flask-13fc31362bcf.herokuapp.com/api/data"
 
 def constructTickerImages(symbol, timeframe, interval) -> bool:
