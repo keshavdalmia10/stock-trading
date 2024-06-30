@@ -134,3 +134,6 @@ def all_in_one(stock : Stock):
     answer = AI.getResponse(payload=payload.getJson())
     
     stock.writejson(answer)
+    tickerHelper.deleteImageIfExist(stock_name, "60m")
+    tickerHelper.deleteImageIfExist(stock_name, "5m")
+    tickerHelper.deleteImageIfExist(stock_name, "15m")

@@ -75,7 +75,7 @@ def getTickerImagePath(stockname, interval):
         return f'ERROR: Image file path {image_file_path} does not exist'
     
 def deleteImageIfExist(stockname, interval):
-    image_file_name = f'{stockname}-{interval}chart.png'
+    image_file_name = f'{stockname}-{interval}-chart.png'
     image_file_path = f'my-stock-app/{image_file_name}'
     if os.path.exists(image_file_path):
         os.remove(image_file_path)

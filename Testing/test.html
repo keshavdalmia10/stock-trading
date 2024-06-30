@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chuck Norris Jokes API Example</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .container h1 {
+            margin: 0 0 20px;
+        }
+        .container button {
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .container button:hover {
+            background-color: #0056b3;
+        }
+        .joke {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            display: none; /* Initially hidden */
+        }
+        .loading-spinner {
+            border: 6px solid rgba(0, 123, 255, 0.3);
+            border-radius: 50%;
+            border-top: 6px solid #007BFF;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto; /* Centering */
+            display: none; /* Initially hidden */
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Chuck Norris Jokes API Example</h1>
+        <button onclick="fetchJoke()">Get Joke</button>
+        <div class="loading-spinner" id="spinner"></div>
+        <div class="joke" id="joke"></div>
+    </div>
+
+    <script>
+        async function fetchJoke() {
+            const url = 'https://api.chucknorris.io/jokes/random';
+
+            try {
+                const spinner = document.getElementById('spinner');
+                spinner.style.display = 'block'; // Show spinner
+
+                await delay(10000); // 10 seconds delay
+
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch joke');
+                }
+                const data = await response.json();
+                displayJoke(data);
+            } catch (error) {
+                const jokeDiv = document.getElementById('joke');
+                jokeDiv.innerHTML = `<p style="color: red;">${error.message}</p>`;
+            } finally {
+                const spinner = document.getElementById('spinner');
+                spinner.style.display = 'none'; // Hide spinner
+            }
+        }
+
+        function displayJoke(jokeData) {
+            const jokeDiv = document.getElementById('joke');
+            jokeDiv.innerHTML = `
+                <p>${jokeData.value}</p>
+            `;
+            jokeDiv.style.display = 'block'; // Show joke div
+        }
+
+        function delay(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+    </script>
+</body>
+</html>
