@@ -14,7 +14,7 @@ def constructTickerImages(symbol, timeframe, interval) -> bool:
         print("Response received successfully!")
         return True
     else:
-        print(f"Failed to get image response. Status code: {response.status_code}")
+        print(f"Failed to get image for {symbol} {timeframe} {interval} for  response. Status code: {response.status_code}")
         return False
     
 def get_stock_data(symbol, timeframe, interval):
@@ -81,3 +81,8 @@ def deleteImageIfExist(stockname, interval):
     image_file_path = f'my-stock-app/{image_file_name}'
     if os.path.exists(image_file_path):
         os.remove(image_file_path)
+
+def delete_all_generated_images(stockname):
+    deleteImageIfExist(stockname, "60m")
+    deleteImageIfExist(stockname, "5m")
+    deleteImageIfExist(stockname, "15m")
