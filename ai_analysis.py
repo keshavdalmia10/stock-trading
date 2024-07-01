@@ -121,13 +121,13 @@ def all_in_one(stock : Stock):
     image_path_15min = tickerHelper.getTickerImagePath(stock_name, "15m")
     image_path_5min = tickerHelper.getTickerImagePath(stock_name, "5m")
     image_5d_60min = Content(content_type=ContentType.IMAGE_URL, value= image_path_5d_60min)
-    image_15min = Content(content_type=ContentType.IMAGE_URL, value= image_path_15min)
+    image_5d_15min = Content(content_type=ContentType.IMAGE_URL, value= image_path_15min)
     image_5min = Content(content_type=ContentType.IMAGE_URL, value= image_path_5min)
 
     stock_trading_data_5m_1d = tickerHelper.get_stock_data(stock_name, "1d", "5m")
 
     user_prompt_text = Content(content_type= ContentType.TEXT, value=PrompText.USER_PROMPT.format(stockname = stock_name, fibonaci_json = fibonacciString30min, stock_data = stock_trading_data_5m_1d ))
-    user_message = Message(role=Role.USER, content=[image_5d_60min, image_15min, image_5min, user_prompt_text])
+    user_message = Message(role=Role.USER, content=[image_5d_60min, image_5d_15min, image_5min, user_prompt_text])
 
     payload = Payload(model=Model.GPT4o, messages= [system_message, example_user_message, example_assistant_message, user_message])
     

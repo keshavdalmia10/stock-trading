@@ -14,7 +14,7 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-api_key = "sk-proj-BE8OgmDpTABgJJpmnWhIT3BlbkFJwgm7Zt9jYa6wyGacJVx4"
+api_key = "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"
 
 headers = {
   "Content-Type": "application/json",

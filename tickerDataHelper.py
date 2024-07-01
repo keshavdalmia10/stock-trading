@@ -4,6 +4,8 @@ import os
 generate_chart_url = "http://localhost:3000/generate-chart"
 fibonaci_classic_url = "https://stock-trading-flask-13fc31362bcf.herokuapp.com/api/pivot"
 stock_data_url = "https://stock-trading-flask-13fc31362bcf.herokuapp.com/api/data"
+# fibonaci_classic_url = "http://127.0.0.1:8000/api/pivot"
+# stock_data_url = "http://127.0.0.1:8000/api/data"
 
 def constructTickerImages(symbol, timeframe, interval) -> bool:
     url = f"{generate_chart_url}/{symbol}/{timeframe}/{interval}"
@@ -12,7 +14,7 @@ def constructTickerImages(symbol, timeframe, interval) -> bool:
         print("Response received successfully!")
         return True
     else:
-        print(f"Failed to get response. Status code: {response.status_code}")
+        print(f"Failed to get image response. Status code: {response.status_code}")
         return False
     
 def get_stock_data(symbol, timeframe, interval):
@@ -29,7 +31,7 @@ def get_Classic_Fibonacci(symbol, timeframe, interval):
         print("Response received successfully!")
         return response.json()
     else:
-        print(f"Failed to get response. Status code: {response.status_code}")
+        print(f"Failed to get fibonacci response. Status code: {response.status_code}")
 
 def trigger_1d_5min(stockname):
     interval = "5m"
@@ -43,9 +45,9 @@ def trigger_1d_5min(stockname):
         print(f"Images didn't generate for {timeperiod} {interval}")
 
 
-def trigger_1d_15min(stockname):
+def trigger_5d_15min(stockname):
     interval = "15m"
-    timeperiod = "1d"
+    timeperiod = "5d"
     deleteImageIfExist(stockname, "15m")
     image_generated = constructTickerImages(symbol=stockname, timeframe=timeperiod, interval=interval)
     
