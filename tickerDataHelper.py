@@ -56,6 +56,17 @@ def trigger_5d_15min(stockname):
     else:
         print(f"Images didn't generate for {timeperiod} {interval}")
 
+def trigger_1d_15min(stockname):
+    interval = "15m"
+    timeperiod = "1d"
+    deleteImageIfExist(stockname, "15m")
+    image_generated = constructTickerImages(symbol=stockname, timeframe=timeperiod, interval=interval)
+    
+    if(image_generated):
+        print(f"Images succesfully generated for {interval}")
+    else:
+        print(f"Images didn't generate for {timeperiod} {interval}")
+
 
 def trigger_5d_60min(stockname):
     interval = "60m"
