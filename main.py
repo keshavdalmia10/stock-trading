@@ -1,5 +1,10 @@
 import trader as trader
 import datetime
+import logging
+from logging_config import LogLevel, set_logging_level
+logger = logging.getLogger(__name__)
+
+set_logging_level(LogLevel.INFO)
 
 startTime = datetime.datetime.now()
 
@@ -9,4 +14,4 @@ trader.trade_stocks(stocklist)
 
 
 endTime = datetime.datetime.now()
-print(f'Time taken to execute : {endTime - startTime}')
+logger.info(f'Time taken to execute : {endTime - startTime}')

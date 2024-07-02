@@ -10,8 +10,6 @@ from tenacity import (
     RetryCallState
 )
 import logging 
-
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 api_key = "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"
@@ -26,6 +24,7 @@ def check_response(response):
         error_data = response.json().get("error", {})
         retry_after_str = error_data.get("message", "").split("try again in ")[-1].split("s.")[0]
         retry_after = float(retry_after_str) if retry_after_str else 10.0  # Default to 10 seconds if not specified
+        logger.info("Rate limit hit")
         raise RateLimitError(f"Rate limit exceeded. Retrying after {retry_after} seconds...", retry_after)
     elif not response.ok:
         response.raise_for_status()

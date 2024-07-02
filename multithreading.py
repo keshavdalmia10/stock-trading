@@ -1,6 +1,8 @@
 import threading
 import tickerDataHelper as tickerHelper
 import datetime
+import logging
+logger = logging.getLogger(__name__)
 
 
 def generate_all_charts_for_stock(stockname):
@@ -18,7 +20,5 @@ def generate_all_charts_for_stock(stockname):
     thread2.join()
     thread3.join()
     endTime = datetime.datetime.now()
-    print(f'Images constructed in : {endTime - startTime}')
-    print("All Image threads have finished.")
-
+    logger.info(f'{stockname} images constructed in : {endTime - startTime}')
 

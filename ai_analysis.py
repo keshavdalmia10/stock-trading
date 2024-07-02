@@ -10,6 +10,8 @@ import tickerDataHelper as tickerHelper
 import json
 from multithreading import generate_all_charts_for_stock
 import json
+import logging
+logger = logging.getLogger(__name__)
 
 def imageanalysis(stock : Stock):
     stockname = stock.stock_name

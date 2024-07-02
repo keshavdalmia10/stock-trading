@@ -2,6 +2,8 @@ from typing import List
 from analyzable_stock import AnalyzableStock
 import threading
 from tabulate import tabulate
+import logging
+logger = logging.getLogger(__name__)
 
 def sort_stock(stocklist : List[AnalyzableStock]):
     sortedlist = sorted(stocklist, key=lambda stock: stock.rating, reverse=True)
