@@ -9,6 +9,10 @@ set_logging_level(LogLevel.INFO)
 startTime = datetime.datetime.now()
 
 # stocklist = ["ZOMATO.NS", "RELIANCE.NS", "PNB.NS", "IDEA.NS", "YESBANK.NS", "INDUSTOWER.NS", "SAIL.NS", "BHEL.NS"]
+# stocklist = ["KINGFA.NS", "SRGHFL.NS", "STCINDIA.NS", "DLINKINDIA.NS","SHIVALIK.NS", "GMBREW.NS", "CREATIVE.NS", "CASTROLIND.NS"]
+# stocklist = ["IZMO.NS", "THEINVEST.NS", "ONEPOINT.NS", "DCM.NS", "HUDCO.NS", "GPPL.NS", "ZYDUSWELL.NS", "BOROLTD.NS"]
+# stocklist = ["SOTL.NS", "PONNIERODE.NS", "HARSHA.NS", "SGIL.NS","PYRAMID.NS", "EMAMIPAP.NS", "PRAKASH.NS", "TVSSRICH.NS", "PITTIEING.NS"]
+
 stocklist = ["ZOMATO.NS"]
 trader.trade_stocks(stocklist)
 
