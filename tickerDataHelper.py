@@ -48,6 +48,12 @@ def trigger_5d_15min(stockname):
     deleteImageIfExist(stockname, "15m")
     image_generated = constructTickerImages(symbol=stockname, timeframe=timeperiod, interval=interval)
 
+def trigger_1mo_1d(stockname):
+    interval = "1d"
+    timeperiod = "1mo"
+    deleteImageIfExist(stockname, "1d")
+    image_generated = constructTickerImages(symbol=stockname, timeframe=timeperiod, interval=interval)
+
 def trigger_1d_15min(stockname):
     interval = "15m"
     timeperiod = "1d"
@@ -80,3 +86,4 @@ def delete_all_generated_images(stockname):
     deleteImageIfExist(stockname, "60m")
     deleteImageIfExist(stockname, "5m")
     deleteImageIfExist(stockname, "15m")
+    deleteImageIfExist(stockname, "1d")
