@@ -13,7 +13,10 @@ startTime = datetime.datetime.now()
 # stocklist = ["IZMO.NS", "THEINVEST.NS", "ONEPOINT.NS", "DCM.NS", "HUDCO.NS", "GPPL.NS", "ZYDUSWELL.NS", "BOROLTD.NS"]
 # stocklist = ["SOTL.NS", "PONNIERODE.NS", "HARSHA.NS", "SGIL.NS","PYRAMID.NS", "EMAMIPAP.NS", "PRAKASH.NS", "TVSSRICH.NS", "PITTIEING.NS"]
 
-stocklist = ["ZOMATO.NS"]
+# stocklist = ["IDEA.NS", "YESBANK.NS", "PNB.NS", "HFCL.NS","INDUSTOWER.NS", "SAIL.NS", "INDIACEM.NS", "NHPC.NS"]
+# stocklist = ["UJJIVANSFB.NS", "BHEL.NS", "CANBK.NS", "GMRINFRA.NS","ZOMATO.NS"]
+
+stocklist = ["UJJIVANSFB.NS"]
 trader.trade_stocks(stocklist)
 
 
