@@ -4,6 +4,8 @@ from prompt import PrompText
 import tickerDataHelper as tickerHelper
 from content import Content, ContentType
 import json
+import datetime
+import threading
 import trader as trader
 
 import ai_analysis
@@ -12,15 +14,15 @@ import ai_analysis
 # trader.trade_stocks(stocklist)
 
 #Check if variables are being assigned properly
-stock = AnalyzableStock("ZOMATO.NS")
-stock.analyse()
+# stock = AnalyzableStock("ZOMATO.NS")
+# stock.analyse()
 # print(f'stock entry point : {stock.entry_point}')
 # print(f'stock stop loss : {stock.stop_loss}')
 # print(f'stock target point : {stock.target_point}')
 # print(f'stock analysis : {stock.analysis}')
 # print(f'stock rating : {stock.rating}')
 
-# a = tickerHelper.get_stock_data("RELIANCE.NS", "1d", "5m")
+# a = tickerHelper.constructTickerImages("RELIANCE.NS", "1d", "5m")
 # print(type(a.json()))
 # print(a.json())
 
@@ -45,3 +47,23 @@ stock.analyse()
 # stock2.testwrite("Anyting")
 # print(stock1.analysis)
 # print(stock2.analysis)
+
+def generate_charts_for_stocks(stock_symbols):
+    threads = []
+    start_time = datetime.datetime.now()
+    
+    for stock_symbol in stock_symbols:
+        thread = threading.Thread(target=generate_all_charts_for_stock, args=(stock_symbol,))
+        threads.append(thread)
+        thread.start()
+    
+    for thread in threads:
+        thread.join()
+    
+    end_time = datetime.datetime.now()
+    print(end_time - start_time)
+
+# Example usage
+stock_symbols = ["ZOMATO.NS", "YESBANK.NS", "RELIANCE.NS", "PNB.NS", "HDFCBANK.NS"]
+# stock_symbols = ["ZOMATO.NS"]
+generate_charts_for_stocks(stock_symbols)
