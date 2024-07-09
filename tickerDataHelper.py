@@ -3,16 +3,22 @@ import os
 import logging
 logger = logging.getLogger(__name__)
 
-generate_chart_url = "http://localhost:3000/generate-chart"
+generate_chart_url = "https://stock-trading-nodejs-916ff33dc996.herokuapp.com/generate-chart"
 fibonaci_classic_url = "https://stock-trading-flask-13fc31362bcf.herokuapp.com/api/pivot"
 stock_data_url = "https://stock-trading-flask-13fc31362bcf.herokuapp.com/api/data"
 # fibonaci_classic_url = "http://127.0.0.1:8000/api/pivot"
 # stock_data_url = "http://127.0.0.1:8000/api/data"
+# generate_chart_url = "http://localhost:3000/generate-chart"
 
 def constructTickerImages(symbol, timeframe, interval) -> bool:
     url = f"{generate_chart_url}/{symbol}/{timeframe}/{interval}"
     response = requests.get(url)
     if response.status_code == 200:
+        folder_name = "my-stock-app"
+        file_name = f'{symbol}-{interval}-chart.png'
+        save_path = os.path.join(folder_name, file_name)
+        with open(save_path, 'wb') as file:
+                file.write(response.content)
         logger.debug(f'Image {symbol}-{timeframe}-{interval} received successfully!')
         return True
     else:
