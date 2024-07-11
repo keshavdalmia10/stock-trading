@@ -41,3 +41,5 @@ def trade_stocks(stocknamelist : List[str]):
 
     print(table)
 
+    return stocklist
+
