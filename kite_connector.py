@@ -114,3 +114,26 @@ class KiteConnector:
         live_balance = margins['available']['live_balance']
         live_balance = margins['available']['live_balance']
         return live_balance
+
+    def on_ticks(self, ws, ticks):
+        # Fetch and print the current price
+        self.current_price = ticks[0]['last_price']
+        print(f"Current price: {self.current_price}")
+
+    def on_connect(self, ws, response):
+        # Subscribe to the desired instrument
+        ws.subscribe([self.instrument_token])
+        ws.set_mode(ws.MODE_FULL, [self.instrument_token])
+
+    def on_close(self, ws, code, reason):
+        print(f"WebSocket closed: {code} | {reason}")
+
+    def get_current_price(self):
+        # Method to access the current price externally
+        return self.current_price
+
+    def socket(self):
+        self.kws.on_ticks = self.on_ticks
+        self.kws.on_connect = self.on_connect
+        self.kws.on_close = self.on_close
+        self.kws.connect(threaded=True)

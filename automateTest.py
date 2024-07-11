@@ -4,16 +4,15 @@ from kite_connector import KiteConnector
 import trader as trader
 
 class AutomateTest:
-    def __init__(self, kite_connector, stock_names):
+    def __init__(self, kite_connector, stock_list):
         self.kite_connector = kite_connector
-        self.stock_names = [name.replace('.NS', '') for name in stock_names]
+        self.stock_list= stock_list 
         self.high_rating_stocks = []
 
     def fetch_and_filter_stocks(self):
-        stock_list = [AnalyzableStock(name) for name in self.stock_names]
-        for stock in stock_list:
-            stock.analyse()
-            if stock.rating > 8 and stock.strategy == "Long":
+
+        for stock in self.stock_list:
+            if stock.rating > 8 and stock.strategy == "long":
                 self.high_rating_stocks.append(stock)
         print("Filtered high rating stocks for trading.")
 
@@ -28,8 +27,9 @@ class AutomateTest:
             thread.join()
 
     def trade_stock(self, stock):
+        tradable_stock_name = stock.stock_name.replace(".NS", "")
         instrument_token = self.kite_connector.fetch_instrument_token(stock.stock_name) 
-
+        current_price = self.kite_connector.get_current_price(instrument_token)
         if current_price >= stock.entry_point:
             print(f"Started placing order for {stock.stock_name} at {current_price}")
             self.kite_connector.place_stock_order(quantity=100, tradingsymbol=stock.stock_name)
@@ -39,11 +39,11 @@ class AutomateTest:
 
 
 
-STOCK_NAMES = ["HDFCLIFE.NS", "M&M.NS", "ADANIPORTS.NS", "SUNPHARMA.NS", "LT.NS", "ADANIENT.NS", "CIPLA.NS"]
+STOCK_NAMES = ["HDFCLIFE.NS", "M&M.NS"]
 processed_stock_list = trader.trade_stocks(STOCK_NAMES)
 
 kite_connector = KiteConnector(api_key="d2myrf8n2p720jby", api_secret="4l6bswdi9d5ti0dqki6kffoycgwpgla1")
 
-automateTest = AutomateTest(kite_connector,STOCK_NAMES)
+automateTest = AutomateTest(kite_connector,processed_stock_list)
 automateTest.fetch_and_filter_stocks()
 automateTest.trade_stocks()
