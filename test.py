@@ -5,6 +5,7 @@ import tickerDataHelper as tickerHelper
 from content import Content, ContentType
 import json
 import trader as trader
+import model
 
 import ai_analysis
 #Check multithreading
@@ -12,8 +13,8 @@ import ai_analysis
 # trader.trade_stocks(stocklist)
 
 #Check if variables are being assigned properly
-stock = AnalyzableStock("ZOMATO.NS")
-stock.analyse()
+# stock = AnalyzableStock("ZOMATO.NS")
+# stock.analyse()
 # print(f'stock entry point : {stock.entry_point}')
 # print(f'stock stop loss : {stock.stop_loss}')
 # print(f'stock target point : {stock.target_point}')

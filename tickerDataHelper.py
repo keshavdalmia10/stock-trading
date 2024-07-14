@@ -6,6 +6,7 @@ logger = logging.getLogger(__name__)
 generate_chart_url = "http://localhost:3000/generate-chart"
 fibonaci_classic_url = "https://stock-trading-flask-13fc31362bcf.herokuapp.com/api/pivot"
 stock_data_url = "https://stock-trading-flask-13fc31362bcf.herokuapp.com/api/data"
+stock_indicator_url = "https://stock-trading-flask-13fc31362bcf.herokuapp.com/api/indicators"
 # fibonaci_classic_url = "http://127.0.0.1:8000/api/pivot"
 # stock_data_url = "http://127.0.0.1:8000/api/data"
 
@@ -25,6 +26,14 @@ def get_stock_data(symbol, timeframe, interval):
     if response.status_code == 200:
         return response.json()
 
+def get_stock_indicator_data(symbol, timeframe, interval):
+    url = f"{stock_indicator_url}/{symbol}/{timeframe}/{interval}" 
+    response = requests.get(url)
+    if response.status_code == 200:
+        logger.debug(f'Indicator {symbol}-{timeframe}-{interval} received successfully!')
+        return response.json()
+    else:
+        logger.critical(f"Failed to get stock indicator data for {symbol}. Status code: {response.status_code}")
 
 def get_Classic_Fibonacci(symbol, timeframe, interval):
     url = f"{fibonaci_classic_url}/{symbol}/{timeframe}/{interval}"

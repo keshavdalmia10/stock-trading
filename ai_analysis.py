@@ -171,3 +171,30 @@ def candlestick_volume_analysis(stock : Stock):
     stock.writejson(answer)
 
     tickerHelper.delete_all_generated_images(stock_name)
+
+
+def populateStockRating(stock : Stock):
+    stock_name = stock.stock_name
+
+    system_text = Content(content_type= ContentType.TEXT, value=PrompText.SYSTEM_PROMPT_RATING.value)
+    system_message = Message(role=Role.SYSTEM, content=[system_text])
+
+    initial_user_text = Content(content_type= ContentType.TEXT, value=PrompText.USER_QUESTION_RATING.value)
+    example_user_message = Message(role=Role.USER, content=[initial_user_text])
+
+    assistant_response_text = Content(content_type= ContentType.TEXT, value=PrompText.ASSISTANT_ANSWER_RATING.value)
+    example_assistant_message = Message(role=Role.ASSISTANT, content=[assistant_response_text])
+
+    stock_indicator_data = tickerHelper.get_stock_indicator_data(stock.stock_name, "5d", "15m")
+
+    user_prompt_text = Content(content_type= ContentType.TEXT, value=PrompText.USER_PROMPT_RATING.format(stockname = stock_name, stockIndicatorDetails = stock_indicator_data))
+
+    user_message = Message(role=Role.USER, content=[user_prompt_text])
+
+    payload = Payload(model=Model.GPT4, messages= [system_message, example_user_message, example_assistant_message, user_message])
+
+    answer = AI.getResponse(payload=payload.getJson())
+    
+    stock.writejson(answer)
+
+    tickerHelper.delete_all_generated_images(stock_name)

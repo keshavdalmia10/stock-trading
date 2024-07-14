@@ -91,10 +91,16 @@ class Stock:
         return cls.message_history    
 
     def writejson(self, json_string):
-        wjson = json.loads(json_string)
-        self.entry_point = wjson['entry']
-        self.stop_loss = wjson['stoploss']
-        self.target_point = wjson['target']
-        self.trading_strategy = wjson['position']
-        self.rating = wjson['rating']
-        self.analysis = wjson['analysis']
+        wjson = json.loads(json_string)    
+        if 'entry' in wjson:
+            self.entry_point = wjson['entry']
+        if 'stoploss' in wjson:
+            self.stop_loss = wjson['stoploss']
+        if 'target' in wjson:
+            self.target_point = wjson['target']
+        if 'position' in wjson:
+            self.trading_strategy = wjson['position']
+        if 'rating' in wjson:
+            self.rating = wjson['rating']
+        if 'analysis' in wjson:
+            self.analysis = wjson['analysis']

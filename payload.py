@@ -14,11 +14,15 @@ class Payload:
             raise ValueError(f"INVALID MODEL: Model '{model.value}' is invalid. Only models {', '.join(valid_models)} are allowed.")
 
     def to_dict(self):
-        return {
+        response_dict = {
             'model': self.model.value,
-            'response_format':{"type":"json_object"},
             'messages': [m.to_dict() for m in self.messages]
         }
+
+        if self.model.value != Model.GPT4.value:
+            response_dict['response_format'] = {"type": "json_object"}
+
+        return response_dict
     
     def getJson(self):
         return self.to_dict()
