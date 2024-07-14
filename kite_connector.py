@@ -1,7 +1,8 @@
 import json
 import os
 from datetime import datetime, timedelta
-from kiteconnect import KiteConnect
+from kiteconnect import KiteConnect, KiteTicker
+from stock import Stock
 import logging
 logger = logging.getLogger(__name__)
 
@@ -12,6 +13,9 @@ class KiteConnector:
         self.session_file = session_file
         self.kite = KiteConnect(api_key=api_key)
         self._load_session()
+        self.intrTokenVSStock = {}
+        self.instrumentTokensList = []
+        self.kws = None
 
     def datetime_handler(self, x):
         if isinstance(x, datetime):
@@ -61,7 +65,7 @@ class KiteConnector:
             quantity=quantity,
             order_type=self.kite.ORDER_TYPE_SL,
             price=stoploss_price,
-            trigger_price=stoploss_price,  # Adjust based on your broker's requirement
+            trigger_price=stoploss_price,
             product=self.kite.PRODUCT_MIS,
             variety=self.kite.VARIETY_REGULAR
     )
@@ -109,31 +113,53 @@ class KiteConnector:
     
     def live_balance(self):
         margins = self.kite.margins(segment="equity")
-        # available_cash = margins['available']['cash']
-        # net = margins['net']
-        live_balance = margins['available']['live_balance']
         live_balance = margins['available']['live_balance']
         return live_balance
 
     def on_ticks(self, ws, ticks):
-        # Fetch and print the current price
-        self.current_price = ticks[0]['last_price']
-        print(f"Current price: {self.current_price}")
+        print("Ticks received")
+        for tick in ticks:
+            instrument_token = tick['instrument_token']
+            stock = self.intrTokenVSStock[instrument_token]
+            last_price = tick['last_price']
+            stock_entry = stock.entry_price
+            stock_stoploss = stock.stop_loss
+            stock_target = stock.target_point
+            stock_name = stock.stock_name
+            tradable_stock_name = stock_name.replace(".NS", "")
+            print(f'Last price : {stock_name} - {last_price}')
 
     def on_connect(self, ws, response):
-        # Subscribe to the desired instrument
-        ws.subscribe([self.instrument_token])
-        ws.set_mode(ws.MODE_FULL, [self.instrument_token])
+        print("WebSocket connected")
+        ws.subscribe(self.instrumentTokensList)
+        ws.set_mode(ws.MODE_FULL, self.instrumentTokensList)
 
     def on_close(self, ws, code, reason):
         print(f"WebSocket closed: {code} | {reason}")
 
-    def get_current_price(self):
-        # Method to access the current price externally
-        return self.current_price
-
-    def socket(self):
+    def start_web_socket(self):
+        session_data = self.load_session()
+        self.kws = KiteTicker(self.api_key, session_data["access_token"])
         self.kws.on_ticks = self.on_ticks
         self.kws.on_connect = self.on_connect
         self.kws.on_close = self.on_close
         self.kws.connect(threaded=True)
+
+    def updateInstrumentListForBought(self, instrument_bought):
+        new_instrumentTokenlist = list(self.instrumentTokensList)
+        self.kws.unsubscribe(self.instrumentTokensList)
+        new_instrumentTokenlist.remove(instrument_bought)
+        self.instrumentTokensList = new_instrumentTokenlist
+        self.kws.subscribe(self.instrumentTokensList)
+        self.kws.set_mode(self.kws.MODE_FULL, self.instrumentTokensList)
+
+    def addToInstrumentList(self,newInstrumentTokenList):
+        session_data = self.load_session()
+        self.kws = KiteTicker(self.api_key, session_data["access_token"])
+        if len(self.instrumentTokensList) == 0:
+            self.instrumentTokensList.extend(newInstrumentTokenList)
+        else:
+            self.kws.unsubscribe(self.instrumentTokensList)
+            self.instrumentTokensList.extend(newInstrumentTokenList)
+        self.kws.subscribe(self.instrumentTokensList)
+        self.kws.set_mode(self.kws.MODE_FULL, self.instrumentTokensList)

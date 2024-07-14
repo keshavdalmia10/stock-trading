@@ -9,7 +9,7 @@ def sort_stock(stocklist : List[AnalyzableStock]):
     sortedlist = sorted(stocklist, key=lambda stock: stock.rating, reverse=True)
     return sortedlist
 
-def trade_stocks(stocknamelist : List[str]):
+def populate_stocks_withAI(stocknamelist : List[str]):
     stocklist = [AnalyzableStock(name) for name in stocknamelist]
     threads = []
     for stock in stocklist:

@@ -114,7 +114,7 @@ while(True):
     # Function to place an order
     def place_order():
         try:
-            order_id = kite.place_order(tradingsymbol="DHANI",
+            order_id = kite.place_order(tradingsymbol="RELIANCE",
                                         variety=kite.VARIETY_REGULAR,
                                         exchange=kite.EXCHANGE_NSE,
                                         transaction_type=kite.TRANSACTION_TYPE_BUY,
@@ -130,10 +130,10 @@ while(True):
         # Check if the current price is equal to the entry price
         current_price = ticks[0]['last_price']
         print(f"Current price: {current_price}")
-        if current_price <= entry_price:
-            print("Target price reached, placing order...")
-            place_order()
-            ws.close()
+        # if current_price <= entry_price:
+        #     print("Target price reached, placing order...")
+        #     # place_order()
+        ws.close()
 
     def on_connect(ws, response):
         ws.subscribe([instrument_token])
