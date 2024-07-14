@@ -97,4 +97,4 @@ class Stock:
         self.target_point = wjson['target']
         self.trading_strategy = wjson['position']
         self.rating = wjson['rating']
-        # self.analysis = wjson['analysis']
+        self.analysis = wjson['analysis']
