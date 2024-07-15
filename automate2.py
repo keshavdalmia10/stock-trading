@@ -51,14 +51,14 @@ else:
 
 
 # # Fetch all instruments
-try:
-    instruments = kite.instruments(exchange=kite.EXCHANGE_NSE)
-    # Filter for a specific stock by its trading symbol and exchange
-    for instrument in instruments:
-        if instrument['tradingsymbol'] == tradingsymbol:
-            print(f"Found Infosys: Token = {instrument['instrument_token']}, Name = {instrument['name']}")
-except Exception as e:
-    print(f"Failed to fetch instruments: {str(e)}")
+# try:
+#     instruments = kite.instruments(exchange=kite.EXCHANGE_NSE)
+#     # Filter for a specific stock by its trading symbol and exchange
+#     for instrument in instruments:
+#         if instrument['tradingsymbol'] == tradingsymbol:
+#             print(f"Found Infosys: Token = {instrument['instrument_token']}, Name = {instrument['name']}")
+# except Exception as e:
+#     print(f"Failed to fetch instruments: {str(e)}")
 
 def place_stoploss(quantity, stoploss_price, tradingsymbol):
         stoploss_order_id = kite.place_order(
@@ -109,7 +109,7 @@ print(f'Live balance : {live_balance}')
 
 while(True):
     entry_price = float(input("Enter the entry price: "))
-    instrument_token = 6593537  # Example token for Infosys; replace with your stock's token
+    instrument_token = 3938305  # Example token for Infosys; replace with your stock's token
 
     # Function to place an order
     def place_order():

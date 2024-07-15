@@ -10,7 +10,7 @@ logging.basicConfig(level=logging.DEBUG)
 # You need to have these credentials from your Kite account
 api_key = "d2myrf8n2p720jby"
 api_secret = "4l6bswdi9d5ti0dqki6kffoycgwpgla1"
-access_token = "rY8rD5HJOlZjCItm9zko3UGpTBOn5tk2"
+access_token = "bJ7D05w8r6SMGvA9zA7wMqZAfjnMLAWw"
 
 # Initialize KiteTicker object
 kws = KiteTicker(api_key, access_token)
@@ -42,6 +42,17 @@ def on_reconnect(ws, attempts_count):
 
 def on_order_update(ws, data):
     print(f"Order update: {data}")
+
+def fetch_instrument_token(self, tradingsymbol):
+        try:
+            instruments = self.kite.instruments(exchange=self.kite.EXCHANGE_NSE)
+            for instrument in instruments:
+                if instrument['tradingsymbol'] == tradingsymbol:
+                    print(f"Found {tradingsymbol}: Token = {instrument['instrument_token']}, Name = {instrument['name']}")
+                    return instrument['instrument_token']
+        except Exception as e:
+            print(f"Failed to fetch instruments: {str(e)}")
+        return None
 
 # Assign the callback functions
 kws.on_ticks = on_ticks
@@ -98,13 +109,21 @@ def user_input_loop():
     while True:
         try:
             input_str = input("Enter instrument tokens to add (comma-separated) or 'exit' to quit: ")
-            if input_str.lower() == 'exit':
+            string_split = input_str.split()
+            command = string_split[0].lower()
+            if command == 'exit':
                 print("Exiting...")
                 subscription_queue.put(None)
                 kws.stop()
                 break
-            tokens_to_add = [int(token.strip()) for token in input_str.split(",")]
-            update_subscriptions(add_tokens=tokens_to_add)
+            elif command == 'add':
+                tokens_to_add = [int(token.strip()) for token in string_split[1].split(",")]
+                update_subscriptions(add_tokens=tokens_to_add)
+            elif command == 'rem':
+                tokens_to_remove = [int(token.strip()) for token in string_split[1].split(",")]
+                update_subscriptions(remove_tokens=tokens_to_remove)
+            # tokens_to_add = [int(token.strip()) for token in input_str.split(",")]
+            # update_subscriptions(add_tokens=tokens_to_add)
         except ValueError:
             print("Invalid input. Please enter comma-separated instrument tokens.")
 

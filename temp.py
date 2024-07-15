@@ -1,1 +1,5 @@
-{"indicators": {"ATR(14)": 12.951923689496088,"Adj Close": 3197.10009765625,"Bollinger_Lower(20)": 3158.1596408159853,"Bollinger_Upper(20)": 3212.2354031293276,"Close": 3197.10009765625,"Datetime": "2024-07-12T15:15:00Z","EMA(20)": 3187.603713685095,"High": 3198.75,"Ichimoku_Base(9,26)": 3179.5999755859375,"Ichimoku_Conversion(9,26)": 3196.0999755859375,"Ichimoku_Lag(26)":NaN,"Ichimoku_Lead_A(9,26,52)": 3187.8499755859375,"Ichimoku_Lead_B(52)": 3175.625,"Low": 3186.0,"MACD(12,26)": 7.1365641366496675,"MACD_Signal(9)": 6.053462126044803,"OBV": -4158755,"Open": 3188.85009765625,"RSI(14)": 57.08181119885913,"SMA(20)": 3185.1975219726564,"Stochastic(14,3)": 71.6453087430972,"Volume": 577084},"interval": "15m","period": "5d","ticker": "RELIANCE.NS"}
+while True:
+    input_str = input("Enter instrument tokens to add (comma-separated) or 'exit' to quit: ")
+    stringsplit = input_str.split()
+    print(f'Command is : {stringsplit[0]}')
+    print(f'Tokens : {stringsplit[1]}')
