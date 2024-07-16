@@ -12,6 +12,7 @@ class Stock:
         self._target_point = 0
         self._trading_strategy = ""
         self._analysis = ""
+        self._intrtoken = 0
 
     @property
     def rating(self):
@@ -23,7 +24,17 @@ class Stock:
             self._rating = new_rating
         else:
             raise ValueError("Rating must be a number between 0 and 10.")
-        
+
+    @property
+    def intrtoken(self):
+        return self._intrtoken
+
+    @intrtoken.setter
+    def intrtoken(self, new_token):
+         if isinstance(new_token, (int)):
+            self._intrtoken = new_token
+         else:
+            raise ValueError("Instrument token must be integer.")   
         
     @property
     def target_point(self):

@@ -43,7 +43,10 @@ def populateStockNamesWithAI(stocknamelist : List[str]):
 
     return stocklist
 
-def get_tradable_stocklist(stocklist : List[AnalyzableStock]):
+def get_tradable_stocklist(stocklist : List[str]):
+
+    if not stocklist:
+        return []
 
     ratedstocks = populate_stockRating_withAI(stocklist)
 
@@ -77,7 +80,10 @@ def get_tradable_stocklist(stocklist : List[AnalyzableStock]):
 
     print(table)
 
-    return stocklist
+    filtered_stocks = [stock for stock in sorted_stock_list if stock.rating >= 7 and stock.entry_point > 0 and stock.stop_loss > 0 and stock.target_point > 0]
+
+    return filtered_stocks
+
 
 
 def populate_stockRating_withAI(stocknamelist : List[str]):
@@ -108,7 +114,7 @@ def populate_stockRating_withAI(stocknamelist : List[str]):
 
     print(table)
 
-    filtered_stocks = [stock for stock in stocklist if stock.rating >= 7.5]
+    filtered_stocks = [stock for stock in stocklist if stock.rating >= 6]
 
     print("Filtering the following stocks")
     for stock in filtered_stocks:

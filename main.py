@@ -16,7 +16,7 @@ startTime = datetime.datetime.now()
 # stocklist = ["IDEA", "YESBANK", "PNB", "HFCL","INDUSTOWER", "SAIL", "INDIACEM", "NHPC"]
 # stocklist = ["UJJIVANSFB", "BHEL", "CANBK", "GMRINFRA","ZOMATO"]
 
-stocklist = ["CIPLA", "SUNPHARMA","PAYTM"]
+stocklist = ['ROHLTD', 'KRYSTAL', 'HERITGFOOD', 'GULFOILLUB', 'HAPPYFORGE']
 # trader.get_tradable_stocklist(stocklist)
 trader.populateStockNamesWithAI(stocklist)
 

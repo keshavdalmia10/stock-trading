@@ -154,15 +154,17 @@ def candlestick_volume_analysis(stock : Stock):
     generate_all_charts_for_stock(stock_name)
 
     image_path_1d_15min = tickerHelper.getTickerImagePath(stock_name, "15m")
-    image_path_1d_5min = tickerHelper.getTickerImagePath(stock_name, "5m")
-    image_path_1mo_1d = tickerHelper.getTickerImagePath(stock_name, "1d")
+    image_path_1d_1min = tickerHelper.getTickerImagePath(stock_name, "1m")
+    # image_path_1mo_1d = tickerHelper.getTickerImagePath(stock_name, "1d")
     image_1d_15min = Content(content_type=ContentType.IMAGE_URL, value= image_path_1d_15min)
-    image_1d_5min = Content(content_type=ContentType.IMAGE_URL, value= image_path_1d_5min)
-    image_1mo_1d = Content(content_type=ContentType.IMAGE_URL, value= image_path_1mo_1d)
+    image_1d_1min = Content(content_type=ContentType.IMAGE_URL, value= image_path_1d_1min)
+    # image_1mo_1d = Content(content_type=ContentType.IMAGE_URL, value= image_path_1mo_1d)
 
     user_prompt_text = Content(content_type= ContentType.TEXT, value=PrompText.USER_PROMPT.format(stockname = stock_name, fibonaci_json = fibonacciString5d_30min))
 
-    user_message = Message(role=Role.USER, content=[image_1d_15min, image_1d_5min, image_1mo_1d, user_prompt_text])
+    # user_message = Message(role=Role.USER, content=[image_1d_15min, image_1d_1min, image_1mo_1d, user_prompt_text])
+
+    user_message = Message(role=Role.USER, content=[image_1d_15min, image_1d_1min, user_prompt_text])
 
     payload = Payload(model=Model.GPT4o, messages= [system_message, example_user_message, example_assistant_message, user_message])
 

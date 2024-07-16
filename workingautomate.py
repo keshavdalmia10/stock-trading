@@ -2,25 +2,109 @@ import signal
 import sys
 import threading
 from queue import Queue
-from kiteconnect import KiteTicker
+from typing import List, Dict
+from kiteconnect import KiteTicker, KiteConnect
 import logging
+import trader as trader
+import math
+from stock import Stock
+logger = logging.getLogger(__name__)
 
-logging.basicConfig(level=logging.DEBUG)
-
-# You need to have these credentials from your Kite account
+#Credentials
 api_key = "d2myrf8n2p720jby"
 api_secret = "4l6bswdi9d5ti0dqki6kffoycgwpgla1"
-access_token = "bJ7D05w8r6SMGvA9zA7wMqZAfjnMLAWw"
+access_token = "iEbXRbBNhWeXaQNGCTwtgchaf0v06nmN"
 
 # Initialize KiteTicker object
 kws = KiteTicker(api_key, access_token)
+kite = KiteConnect(api_key=api_key)
+kite.set_access_token(access_token)
 
 # Queue to handle subscription changes
 subscription_queue = Queue()
+stocksetInQueue = set()
+instrument_stock_dic = {}
+
+showoutput = False
+
 
 def on_ticks(ws, ticks):
     for tick in ticks:
-        print(f"Instrument Token: {tick['instrument_token']}, Last Price: {tick['last_price']}")
+        last_price = tick['last_price']
+        margin = math.floor(last_price / 5)
+        instrumenttoken = tick['instrument_token']
+        stock = instrument_stock_dic[instrumenttoken]
+        stockname = stock.stock_name
+        tradablename = stockname.replace(".NS","")
+        entry = stock.entry_point
+        target = stock.target_point
+        stoploss = stock.stop_loss
+        entry = math.floor(entry * 10) / 10
+        target = math.floor(target * 10) / 10
+        stoploss = math.floor(stoploss * 10) / 10
+        if(last_price >= entry and last_price - entry <= 1.5 and last_price - entry >= 0 and live_balance() - 5000 >= 5000):
+            qty = math.floor(5000 / margin)
+            place_stock_order(qty, tradablename)
+            place_stoploss(qty, stoploss, tradablename)
+            place_target(qty,target, tradablename)
+
+            removeNameFromSetInqeueu([tradablename])
+            instruments_to_remove = [instrumenttoken]    
+            update_subscriptions(remove_tokens=instruments_to_remove)
+
+        # print(f"Instrument Token: {tick['instrument_token']}, Last Price: {tick['last_price']}")
+        if showoutput:
+            print(f'{tradablename}, entry: {entry}, currprice: {last_price}')
+
+def place_stock_order(quantity, tradingsymbol):
+    try:
+        order_id = kite.place_order(tradingsymbol=tradingsymbol,
+                                    variety=kite.VARIETY_REGULAR,
+                                    exchange=kite.EXCHANGE_NSE,
+                                    transaction_type=kite.TRANSACTION_TYPE_BUY,
+                                    quantity=quantity,
+                                    order_type=kite.ORDER_TYPE_MARKET,
+                                    product=kite.PRODUCT_MIS)
+        print(f"Order placed for {tradingsymbol}")
+        logger.info(f"Order placed for {tradingsymbol}")
+        # logger.info(f"Order placed. ID is: {order_id}")
+    except Exception as e:
+        logger.warning(f"Purchase error for {tradingsymbol} : {str(e)}")
+
+def place_stoploss(quantity, stoploss_price, tradingsymbol):
+        try: 
+            stoploss_order_id = kite.place_order(
+            tradingsymbol=tradingsymbol,
+            exchange=kite.EXCHANGE_NSE,
+            transaction_type=kite.TRANSACTION_TYPE_SELL,
+            quantity=quantity,
+            order_type=kite.ORDER_TYPE_SL,
+            price=stoploss_price,
+            trigger_price=stoploss_price,
+            product=kite.PRODUCT_MIS,
+            variety=kite.VARIETY_REGULAR
+    )
+            print(f"Stoploss placed for {tradingsymbol} at {stoploss_price}")
+            logger.info(f"Stoploss placed for {tradingsymbol} at {stoploss_price}")
+        except Exception as e:
+            logger.warning(f"Stoploss placing error for {tradingsymbol} : {str(e)}")
+
+def place_target(quantity, target_price, tradingsymbol):
+        try: 
+            target_order_id = kite.place_order(
+            tradingsymbol=tradingsymbol,
+            exchange=kite.EXCHANGE_NSE,
+            transaction_type=kite.TRANSACTION_TYPE_SELL,
+            quantity=quantity,
+            order_type=kite.ORDER_TYPE_LIMIT,
+            price=target_price,
+            product=kite.PRODUCT_MIS,
+            variety=kite.VARIETY_REGULAR
+    )
+            print(f"Target placed for {tradingsymbol} at {target_price}")
+            logger.info(f"Target placed for {tradingsymbol} at {target_price}")
+        except Exception as e:
+            logger.warning(f"Target placing error for {tradingsymbol} : {str(e)}")
 
 def on_connect(ws, response):
     print("Connected successfully!")
@@ -40,19 +124,50 @@ def on_noreconnect(ws):
 def on_reconnect(ws, attempts_count):
     print(f"Reconnect attempt: {attempts_count}")
 
-def on_order_update(ws, data):
-    print(f"Order update: {data}")
+# def on_order_update(ws, data):
+#     print(f"Order update")
 
-def fetch_instrument_token(self, tradingsymbol):
-        try:
-            instruments = self.kite.instruments(exchange=self.kite.EXCHANGE_NSE)
-            for instrument in instruments:
-                if instrument['tradingsymbol'] == tradingsymbol:
-                    print(f"Found {tradingsymbol}: Token = {instrument['instrument_token']}, Name = {instrument['name']}")
-                    return instrument['instrument_token']
-        except Exception as e:
-            print(f"Failed to fetch instruments: {str(e)}")
-        return None
+def fetch_instrument_token(tradingsymbol):
+    try:
+        instruments = kite.instruments(exchange="NSE")
+        for instrument in instruments:
+            if instrument['tradingsymbol'] == tradingsymbol:
+                print(f"Found {tradingsymbol}: Token = {instrument['instrument_token']}, Name = {instrument['name']}")
+                return instrument['instrument_token']
+    except Exception as e:
+        print(f"Failed to fetch instruments: {str(e)}")
+    return None
+
+def toggleoutput():
+    originalbool = showoutput
+    togglebool = False
+    if originalbool:
+        togglebool = False
+    else:
+        togglebool = True
+    showoutput = togglebool
+
+def mapInstrumentTokens(stockobjectlist : List[Stock]):
+    instrumentokenlistadded = []
+    stocksetadd = set()
+    for stock in stockobjectlist:
+        stockName = stock.stock_name
+        tradableStockname = stockName.replace(".NS","")
+        inst_token = fetch_instrument_token(tradableStockname)
+        print(f'instuement token :{inst_token}')
+        stock.intrtoken = inst_token
+        instrumentokenlistadded.append(inst_token)
+        instrument_stock_dic[inst_token] = stock
+        stocksetadd.add(tradableStockname)
+        print(f'Stock : {stock.stock_name} token={inst_token}')
+    
+    stocksetInQueue.update(stocksetadd)
+    return instrumentokenlistadded 
+    
+def live_balance():
+    margins = kite.margins(segment="equity")
+    live_balance = margins['available']['live_balance']
+    return live_balance
 
 # Assign the callback functions
 kws.on_ticks = on_ticks
@@ -61,7 +176,7 @@ kws.on_close = on_close
 kws.on_error = on_error
 kws.on_noreconnect = on_noreconnect
 kws.on_reconnect = on_reconnect
-kws.on_order_update = on_order_update
+# kws.on_order_update = on_order_update
 
 # Function to handle subscription changes
 def subscription_manager():
@@ -90,6 +205,8 @@ def update_subscriptions(add_tokens=None, remove_tokens=None):
     remove_tokens = set(remove_tokens or [])
     subscription_queue.put((add_tokens, remove_tokens))
 
+
+
 # Connect to WebSocket
 kws.connect(threaded=True)
 
@@ -108,6 +225,7 @@ signal.signal(signal.SIGTERM, signal_handler)
 def user_input_loop():
     while True:
         try:
+            print("\n")
             input_str = input("Enter instrument tokens to add (comma-separated) or 'exit' to quit: ")
             string_split = input_str.split()
             command = string_split[0].lower()
@@ -117,15 +235,35 @@ def user_input_loop():
                 kws.stop()
                 break
             elif command == 'add':
-                tokens_to_add = [int(token.strip()) for token in string_split[1].split(",")]
-                update_subscriptions(add_tokens=tokens_to_add)
+                tokens_to_add = [token.strip() for token in string_split[1].split(",")]
+                print(f'Tokens to add :{tokens_to_add}')
+                stockobjectlist = trader.get_tradable_stocklist(tokens_to_add)
+                print(f'Trade stock size : {len(stockobjectlist)}')
+                if len(stockobjectlist) >= 1:
+                    instruements_to_add = mapInstrumentTokens(stockobjectlist)
+                    update_subscriptions(add_tokens=instruements_to_add)
             elif command == 'rem':
-                tokens_to_remove = [int(token.strip()) for token in string_split[1].split(",")]
-                update_subscriptions(remove_tokens=tokens_to_remove)
-            # tokens_to_add = [int(token.strip()) for token in input_str.split(",")]
-            # update_subscriptions(add_tokens=tokens_to_add)
+                stocknames_to_remove = [token.strip() for token in string_split[1].split(",")]
+                filtered_stocksname_inqueue = [s for s in stocknames_to_remove if s in stocksetInQueue]
+                if len(filtered_stocksname_inqueue) >= 1:
+                    removeNameFromSetInqeueu(filtered_stocksname_inqueue)
+                    instruments_to_remove = [fetch_instrument_token(stockname) for stockname in filtered_stocksname_inqueue]    
+                    update_subscriptions(remove_tokens=instruments_to_remove)
+            elif command == 'queue':
+                print(stocksetInQueue)
+            elif command == 'balance':
+                balance = live_balance()
+                print(f'balance : {balance}')
+            elif command == 'output':
+                toggleoutput()
+                
         except ValueError:
             print("Invalid input. Please enter comma-separated instrument tokens.")
+
+def removeNameFromSetInqeueu(filtered_stocksname_inqueue):
+    for name in filtered_stocksname_inqueue:
+        if name in stocksetInQueue:
+            stocksetInQueue.remove(name)
 
 # Start the user input loop in a separate thread
 input_thread = threading.Thread(target=user_input_loop)
