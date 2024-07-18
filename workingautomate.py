@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 #Credentials
 api_key = "d2myrf8n2p720jby"
 api_secret = "4l6bswdi9d5ti0dqki6kffoycgwpgla1"
-access_token = "iEbXRbBNhWeXaQNGCTwtgchaf0v06nmN"
+access_token = "J8fOW6E0ZQwtYzDJ4cplJMCtiSC9QIei"
 
 # Initialize KiteTicker object
 kws = KiteTicker(api_key, access_token)
@@ -27,6 +27,12 @@ instrument_stock_dic = {}
 
 showoutput = False
 
+def is_within_threshold(entry_price, latest_price, threshold_percentage):
+    threshold_value =entry_price * (threshold_percentage / 100.0)
+    lower_bound = entry_price - threshold_value
+    upper_bound = entry_price + threshold_value
+
+    return lower_bound <= latest_price <= upper_bound
 
 def on_ticks(ws, ticks):
     for tick in ticks:
@@ -39,10 +45,9 @@ def on_ticks(ws, ticks):
         entry = stock.entry_point
         target = stock.target_point
         stoploss = stock.stop_loss
-        entry = math.floor(entry * 10) / 10
         target = math.floor(target * 10) / 10
         stoploss = math.floor(stoploss * 10) / 10
-        if(last_price >= entry and last_price - entry <= 1.5 and last_price - entry >= 0 and live_balance() - 5000 >= 5000):
+        if(last_price >= entry and is_within_threshold(entry_price=entry, latest_price=last_price, threshold_percentage=1.5) and live_balance() - 5000 >= 4000):
             qty = math.floor(5000 / margin)
             place_stock_order(qty, tradablename)
             place_stoploss(qty, stoploss, tradablename)
@@ -70,6 +75,43 @@ def place_stock_order(quantity, tradingsymbol):
         # logger.info(f"Order placed. ID is: {order_id}")
     except Exception as e:
         logger.warning(f"Purchase error for {tradingsymbol} : {str(e)}")
+
+# def cancel_stock_order(order_id):
+#     try:
+#         kite.cancel_order(order_id=order_id,
+#                           variety=kite.VARIETY_REGULAR)
+#         print(f"Order {order_id} cancelled successfully")
+#         logger.info(f"Order {order_id} cancelled successfully")
+#     except Exception as e:
+#         logger.warning(f"Cancellation error for order {order_id}: {str(e)}")
+
+def cancel_remaining_orders(stocknamelist):
+    orders = kite.orders()
+    for stockname in stocknamelist:
+        try:
+            sl_orders = []
+            limit_orders = []
+            # Iterate through orders once and populate sl_orders and limit_orders
+            for order in orders:
+                # print(f"status : {order['status']} name: {order['tradingsymbol']} type: {order['order_type']}")
+                if order['tradingsymbol'] == stockname:
+                    if order['order_type'] == 'SL' and order['status'] == 'TRIGGER PENDING':
+                        sl_orders.append(order)
+                    elif order['order_type'] == 'LIMIT' and order['status'] == 'OPEN':
+                        limit_orders.append(order)
+            print(f"Length sl: {len(sl_orders)}")
+            print(f"Length limit: {len(limit_orders)}")
+            # Check if exactly one SL or one LIMIT order is present and cancel it
+            if (len(sl_orders) == 1 and len(limit_orders) == 0) or (len(limit_orders) == 1 and len(sl_orders) == 0):
+                order_to_cancel = sl_orders[0] if sl_orders else limit_orders[0]
+                order_to_cancel_id = order_to_cancel['order_id']
+                print(f'Order to cancel : {order_to_cancel_id}')
+                kite.cancel_order(order_id=order_to_cancel['order_id'], variety=order_to_cancel['variety'])
+                logging.info(f"Cancelled order: {order_to_cancel['order_id']} for stock {order_to_cancel['tradingsymbol']}")
+
+        except Exception as e:
+            logging.error(f"Error cancelling orders: {e}")
+
 
 def place_stoploss(quantity, stoploss_price, tradingsymbol):
         try: 
@@ -124,8 +166,18 @@ def on_noreconnect(ws):
 def on_reconnect(ws, attempts_count):
     print(f"Reconnect attempt: {attempts_count}")
 
-# def on_order_update(ws, data):
-#     print(f"Order update")
+def on_order_update(ws, data):
+    try:
+        order_id = data['order_id']
+        status = data['status']
+        tradingsymbol = data['tradingsymbol']
+        # if status in ['COMPLETE', 'TRIGGERED']:
+        # print(f"Stock {data['tradingsymbol']} ordertype: {data['order_type']} transactiontype: {data['transaction_type']}. status: {data['status']} orderid: {data['order_id']}")
+        if data['order_type'] == 'LIMIT' and data['transaction_type'] == 'SELL' and data['status'] == 'COMPLETE':
+            print(f"Should cancel : {data['tradingsymbol']}")
+    except Exception as e:
+        print((f"Error in on_order_update callback for order {order_id} ({tradingsymbol}): {str(e)}"))
+        logger.warning(f"Error in on_order_update callback for order {order_id} ({tradingsymbol}): {str(e)}")
 
 def fetch_instrument_token(tradingsymbol):
     try:
@@ -139,13 +191,12 @@ def fetch_instrument_token(tradingsymbol):
     return None
 
 def toggleoutput():
-    originalbool = showoutput
-    togglebool = False
-    if originalbool:
-        togglebool = False
+    global showoutput
+    if showoutput:
+        showoutput = False
     else:
-        togglebool = True
-    showoutput = togglebool
+        showoutput = True
+    print(f"output is now : {showoutput}")
 
 def mapInstrumentTokens(stockobjectlist : List[Stock]):
     instrumentokenlistadded = []
@@ -154,12 +205,12 @@ def mapInstrumentTokens(stockobjectlist : List[Stock]):
         stockName = stock.stock_name
         tradableStockname = stockName.replace(".NS","")
         inst_token = fetch_instrument_token(tradableStockname)
-        print(f'instuement token :{inst_token}')
+        # print(f'instuement token :{inst_token}')
         stock.intrtoken = inst_token
         instrumentokenlistadded.append(inst_token)
         instrument_stock_dic[inst_token] = stock
         stocksetadd.add(tradableStockname)
-        print(f'Stock : {stock.stock_name} token={inst_token}')
+        # print(f'Stock : {stock.stock_name} token={inst_token}')
     
     stocksetInQueue.update(stocksetadd)
     return instrumentokenlistadded 
@@ -176,7 +227,7 @@ kws.on_close = on_close
 kws.on_error = on_error
 kws.on_noreconnect = on_noreconnect
 kws.on_reconnect = on_reconnect
-# kws.on_order_update = on_order_update
+kws.on_order_update = on_order_update
 
 # Function to handle subscription changes
 def subscription_manager():
@@ -256,6 +307,9 @@ def user_input_loop():
                 print(f'balance : {balance}')
             elif command == 'output':
                 toggleoutput()
+            elif command == 'cancel':
+                token_to_cancel = [token.strip() for token in string_split[1].split(",")]
+                cancel_remaining_orders(token_to_cancel)
                 
         except ValueError:
             print("Invalid input. Please enter comma-separated instrument tokens.")

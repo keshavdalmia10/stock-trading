@@ -140,7 +140,7 @@ def all_in_one(stock : Stock):
 
 def candlestick_volume_analysis(stock : Stock):
     stock_name = stock.stock_name
-    fibonacciString5d_30min = tickerHelper.get_Classic_Fibonacci(stock.stock_name, "5d", "30m")
+    fibonacciString5d_15min = tickerHelper.get_Classic_Fibonacci(stock.stock_name, "5d", "15m")
 
     system_text = Content(content_type= ContentType.TEXT, value=PrompText.SYSTEM_PROMPT.value)
     system_message = Message(role=Role.SYSTEM, content=[system_text])
@@ -160,7 +160,7 @@ def candlestick_volume_analysis(stock : Stock):
     image_1d_1min = Content(content_type=ContentType.IMAGE_URL, value= image_path_1d_1min)
     # image_1mo_1d = Content(content_type=ContentType.IMAGE_URL, value= image_path_1mo_1d)
 
-    user_prompt_text = Content(content_type= ContentType.TEXT, value=PrompText.USER_PROMPT.format(stockname = stock_name, fibonaci_json = fibonacciString5d_30min))
+    user_prompt_text = Content(content_type= ContentType.TEXT, value=PrompText.USER_PROMPT.format(stockname = stock_name, fibonaci_json = fibonacciString5d_15min))
 
     # user_message = Message(role=Role.USER, content=[image_1d_15min, image_1d_1min, image_1mo_1d, user_prompt_text])
 
