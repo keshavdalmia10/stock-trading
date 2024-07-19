@@ -102,3 +102,4 @@ def delete_all_generated_images(stockname):
     deleteImageIfExist(stockname, "5m")
     deleteImageIfExist(stockname, "15m")
     deleteImageIfExist(stockname, "1d")
+    deleteImageIfExist(stockname, "1m")

@@ -7,13 +7,23 @@ from kiteconnect import KiteTicker, KiteConnect
 import logging
 import trader as trader
 import math
+import time
+# from logging_config import LogLevel, set_logging_level
 from stock import Stock
 logger = logging.getLogger(__name__)
+
+# set_logging_level(LogLevel.INFO)
 
 #Credentials
 api_key = "d2myrf8n2p720jby"
 api_secret = "4l6bswdi9d5ti0dqki6kffoycgwpgla1"
-access_token = "J8fOW6E0ZQwtYzDJ4cplJMCtiSC9QIei"
+access_token = "JAZjCdT3HZcXzbiSKj8likDYzXL2RUVP"
+
+#variables
+THRESHOLD_PERCT = 1.5
+MINIMUM_BALANCE = 2000
+RATE_PER_STOCK = 9000
+STOCK_CANCEL_DELAY = 10 #in seconds
 
 # Initialize KiteTicker object
 kws = KiteTicker(api_key, access_token)
@@ -34,6 +44,16 @@ def is_within_threshold(entry_price, latest_price, threshold_percentage):
 
     return lower_bound <= latest_price <= upper_bound
 
+def process_stock_cancel(tradingsymbol):
+    time.sleep(STOCK_CANCEL_DELAY) 
+    try:
+        if tradingsymbol is not None:
+            # print(f"Should cancel in thread: {tradingsymbol}")
+            cancel_remaining_orders([tradingsymbol])
+    except Exception as e:
+        logger.warning(f"Error processing queue: {str(e)}")
+
+
 def on_ticks(ws, ticks):
     for tick in ticks:
         last_price = tick['last_price']
@@ -47,8 +67,8 @@ def on_ticks(ws, ticks):
         stoploss = stock.stop_loss
         target = math.floor(target * 10) / 10
         stoploss = math.floor(stoploss * 10) / 10
-        if(last_price >= entry and is_within_threshold(entry_price=entry, latest_price=last_price, threshold_percentage=1.5) and live_balance() - 5000 >= 4000):
-            qty = math.floor(5000 / margin)
+        if(last_price >= entry and is_within_threshold(entry_price=entry, latest_price=last_price, threshold_percentage=THRESHOLD_PERCT) and live_balance() - RATE_PER_STOCK >= MINIMUM_BALANCE):
+            qty = math.floor(RATE_PER_STOCK / margin)
             place_stock_order(qty, tradablename)
             place_stoploss(qty, stoploss, tradablename)
             place_target(qty,target, tradablename)
@@ -76,15 +96,6 @@ def place_stock_order(quantity, tradingsymbol):
     except Exception as e:
         logger.warning(f"Purchase error for {tradingsymbol} : {str(e)}")
 
-# def cancel_stock_order(order_id):
-#     try:
-#         kite.cancel_order(order_id=order_id,
-#                           variety=kite.VARIETY_REGULAR)
-#         print(f"Order {order_id} cancelled successfully")
-#         logger.info(f"Order {order_id} cancelled successfully")
-#     except Exception as e:
-#         logger.warning(f"Cancellation error for order {order_id}: {str(e)}")
-
 def cancel_remaining_orders(stocknamelist):
     orders = kite.orders()
     for stockname in stocknamelist:
@@ -99,13 +110,13 @@ def cancel_remaining_orders(stocknamelist):
                         sl_orders.append(order)
                     elif order['order_type'] == 'LIMIT' and order['status'] == 'OPEN':
                         limit_orders.append(order)
-            print(f"Length sl: {len(sl_orders)}")
-            print(f"Length limit: {len(limit_orders)}")
+            # print(f"Length sl: {len(sl_orders)}")
+            # print(f"Length limit: {len(limit_orders)}")
             # Check if exactly one SL or one LIMIT order is present and cancel it
             if (len(sl_orders) == 1 and len(limit_orders) == 0) or (len(limit_orders) == 1 and len(sl_orders) == 0):
                 order_to_cancel = sl_orders[0] if sl_orders else limit_orders[0]
                 order_to_cancel_id = order_to_cancel['order_id']
-                print(f'Order to cancel : {order_to_cancel_id}')
+                # print(f'Order to cancel : {order_to_cancel_id}')
                 kite.cancel_order(order_id=order_to_cancel['order_id'], variety=order_to_cancel['variety'])
                 logging.info(f"Cancelled order: {order_to_cancel['order_id']} for stock {order_to_cancel['tradingsymbol']}")
 
@@ -169,12 +180,15 @@ def on_reconnect(ws, attempts_count):
 def on_order_update(ws, data):
     try:
         order_id = data['order_id']
-        status = data['status']
+        order_status = data['status']
         tradingsymbol = data['tradingsymbol']
-        # if status in ['COMPLETE', 'TRIGGERED']:
-        # print(f"Stock {data['tradingsymbol']} ordertype: {data['order_type']} transactiontype: {data['transaction_type']}. status: {data['status']} orderid: {data['order_id']}")
-        if data['order_type'] == 'LIMIT' and data['transaction_type'] == 'SELL' and data['status'] == 'COMPLETE':
-            print(f"Should cancel : {data['tradingsymbol']}")
+        order_transactin_type = data['transaction_type']
+        oder_type = data['order_type']
+        if oder_type == 'LIMIT' and order_transactin_type == 'SELL' and order_status == 'COMPLETE':
+            print(f"Should cancel : {tradingsymbol}")
+            cancel_thread = threading.Thread(target=process_stock_cancel, args=(tradingsymbol,))
+            cancel_thread.daemon = True  # Daemonize thread
+            cancel_thread.start()
     except Exception as e:
         print((f"Error in on_order_update callback for order {order_id} ({tradingsymbol}): {str(e)}"))
         logger.warning(f"Error in on_order_update callback for order {order_id} ({tradingsymbol}): {str(e)}")
