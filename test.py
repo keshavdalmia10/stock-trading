@@ -6,7 +6,7 @@ from content import Content, ContentType
 import json
 import trader as trader
 import model
-
+from ai_strategy import AIStrategyConfig, AIStrategy
 import ai_analysis
 #Check multithreading
 # stocklist = ["ZOMATO.NS", "RELIANCE.NS", "PNB.NS"]
@@ -46,3 +46,6 @@ import ai_analysis
 # stock2.testwrite("Anyting")
 # print(stock1.analysis)
 # print(stock2.analysis)
+print(f'Initial strategy : {AIStrategyConfig.get_strategy()}')
+AIStrategyConfig.set_strategy(AIStrategy.GENERATE_AND_USE_CANDLESTICK_GRAPH_AND_PIVOT)
+print(f'Changed strategy : {AIStrategyConfig.get_strategy()}')

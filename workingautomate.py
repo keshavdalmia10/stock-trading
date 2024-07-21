@@ -8,6 +8,7 @@ import logging
 import trader as trader
 import math
 import time
+from ai_strategy import AIStrategy, AIStrategyConfig
 # from logging_config import LogLevel, set_logging_level
 from stock import Stock
 logger = logging.getLogger(__name__)
@@ -24,6 +25,7 @@ THRESHOLD_PERCT = 1.5
 MINIMUM_BALANCE = 2000
 RATE_PER_STOCK = 9000
 STOCK_CANCEL_DELAY = 10 #in seconds
+AIStrategyConfig.set_strategy(AIStrategy.GENERATE_AND_USE_STOCKDATA) #set ai strategy
 
 # Initialize KiteTicker object
 kws = KiteTicker(api_key, access_token)
@@ -51,8 +53,8 @@ def process_stock_cancel(tradingsymbol):
     time.sleep(STOCK_CANCEL_DELAY) 
     try:
         if tradingsymbol is not None:
-            # print(f"Should cancel in thread: {tradingsymbol}")
             cancel_remaining_orders([tradingsymbol])
+            print(f"Stock: {tradingsymbol} cancelled")
     except Exception as e:
         logger.warning(f"Error processing queue: {str(e)}")
 
@@ -201,7 +203,7 @@ def on_order_update(ws, data):
         order_transactin_type = data['transaction_type']
         oder_type = data['order_type']
         if oder_type == 'LIMIT' and order_transactin_type == 'SELL' and order_status == 'COMPLETE':
-            print(f"Should cancel : {tradingsymbol}")
+            print(f"Will cancel : {tradingsymbol} in {STOCK_CANCEL_DELAY} secs")
             cancel_thread = threading.Thread(target=process_stock_cancel, args=(tradingsymbol,))
             cancel_thread.daemon = True  # Daemonize thread
             cancel_thread.start()

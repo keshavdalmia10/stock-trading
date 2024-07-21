@@ -2,6 +2,7 @@ import trader as trader
 import datetime
 import logging
 from logging_config import LogLevel, set_logging_level
+from ai_strategy import AIStrategy, AIStrategyConfig
 logger = logging.getLogger(__name__)
 
 set_logging_level(LogLevel.INFO)
@@ -15,8 +16,7 @@ startTime = datetime.datetime.now()
 
 # stocklist = ["IDEA", "YESBANK", "PNB", "HFCL","INDUSTOWER", "SAIL", "INDIACEM", "NHPC"]
 # stocklist = ["UJJIVANSFB", "BHEL", "CANBK", "GMRINFRA","ZOMATO"]
-
-stocklist = ['ROHLTD', 'KRYSTAL', 'HERITGFOOD', 'GULFOILLUB', 'HAPPYFORGE']
+stocklist = ['ITC']
 # trader.get_tradable_stocklist(stocklist)
 trader.populateStockNamesWithAI(stocklist)
 
