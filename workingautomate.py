@@ -44,6 +44,9 @@ def is_within_threshold(entry_price, latest_price, threshold_percentage):
 
     return lower_bound <= latest_price <= upper_bound
 
+def round_to_nearest_0_05(value):
+    return round(value * 20) / 20
+
 def process_stock_cancel(tradingsymbol):
     time.sleep(STOCK_CANCEL_DELAY) 
     try:
@@ -61,32 +64,45 @@ def on_ticks(ws, ticks):
         instrumenttoken = tick['instrument_token']
         stock = instrument_stock_dic[instrumenttoken]
         stockname = stock.stock_name
+        stocktradingStrategy = stock.trading_strategy
         tradablename = stockname.replace(".NS","")
         entry = stock.entry_point
         target = stock.target_point
         stoploss = stock.stop_loss
-        target = math.floor(target * 10) / 10
-        stoploss = math.floor(stoploss * 10) / 10
-        if(last_price >= entry and is_within_threshold(entry_price=entry, latest_price=last_price, threshold_percentage=THRESHOLD_PERCT) and live_balance() - RATE_PER_STOCK >= MINIMUM_BALANCE):
-            qty = math.floor(RATE_PER_STOCK / margin)
-            place_stock_order(qty, tradablename)
-            place_stoploss(qty, stoploss, tradablename)
-            place_target(qty,target, tradablename)
+        target = round_to_nearest_0_05(target)
+        stoploss = round_to_nearest_0_05(stoploss)
+        if(stocktradingStrategy.lower() == "long"):
+            if(last_price >= entry and is_within_threshold(entry_price=entry, latest_price=last_price, threshold_percentage=THRESHOLD_PERCT) and live_balance() - RATE_PER_STOCK >= MINIMUM_BALANCE):
+                qty = math.floor(RATE_PER_STOCK / margin)
+                place_stock_order(qty, tradablename, kite.TRANSACTION_TYPE_BUY)
+                place_stoploss(qty, stoploss, tradablename, kite.TRANSACTION_TYPE_SELL)
+                place_target(qty,target, tradablename, kite.TRANSACTION_TYPE_SELL)
+                handle_post_order_tasks(tradablename, instrumenttoken)
+        elif(stocktradingStrategy.lower() == "short"):
+            if(last_price <= entry and is_within_threshold(entry_price=entry, latest_price=last_price, threshold_percentage=THRESHOLD_PERCT) and live_balance() - RATE_PER_STOCK >= MINIMUM_BALANCE):
+                qty = math.floor(RATE_PER_STOCK / margin)
+                place_stock_order(qty, tradablename, kite.TRANSACTION_TYPE_SELL)
+                place_stoploss(qty, stoploss, tradablename, kite.TRANSACTION_TYPE_BUY)
+                place_target(qty,target, tradablename, kite.TRANSACTION_TYPE_BUY)
 
-            removeNameFromSetInqeueu([tradablename])
-            instruments_to_remove = [instrumenttoken]    
-            update_subscriptions(remove_tokens=instruments_to_remove)
+                handle_post_order_tasks(tradablename, instrumenttoken)
 
         # print(f"Instrument Token: {tick['instrument_token']}, Last Price: {tick['last_price']}")
         if showoutput:
             print(f'{tradablename}, entry: {entry}, currprice: {last_price}')
 
-def place_stock_order(quantity, tradingsymbol):
+def handle_post_order_tasks(tradablename, instrumenttoken):
+    removeNameFromSetInqeueu([tradablename])
+    instruments_to_remove = [instrumenttoken]
+    update_subscriptions(remove_tokens=instruments_to_remove)
+
+
+def place_stock_order(quantity, tradingsymbol, transactionType):
     try:
         order_id = kite.place_order(tradingsymbol=tradingsymbol,
                                     variety=kite.VARIETY_REGULAR,
                                     exchange=kite.EXCHANGE_NSE,
-                                    transaction_type=kite.TRANSACTION_TYPE_BUY,
+                                    transaction_type=transactionType,
                                     quantity=quantity,
                                     order_type=kite.ORDER_TYPE_MARKET,
                                     product=kite.PRODUCT_MIS)
@@ -124,12 +140,12 @@ def cancel_remaining_orders(stocknamelist):
             logging.error(f"Error cancelling orders: {e}")
 
 
-def place_stoploss(quantity, stoploss_price, tradingsymbol):
+def place_stoploss(quantity, stoploss_price, tradingsymbol, transactionType):
         try: 
             stoploss_order_id = kite.place_order(
             tradingsymbol=tradingsymbol,
             exchange=kite.EXCHANGE_NSE,
-            transaction_type=kite.TRANSACTION_TYPE_SELL,
+            transaction_type=transactionType,
             quantity=quantity,
             order_type=kite.ORDER_TYPE_SL,
             price=stoploss_price,
@@ -142,12 +158,12 @@ def place_stoploss(quantity, stoploss_price, tradingsymbol):
         except Exception as e:
             logger.warning(f"Stoploss placing error for {tradingsymbol} : {str(e)}")
 
-def place_target(quantity, target_price, tradingsymbol):
+def place_target(quantity, target_price, tradingsymbol, transactionType):
         try: 
             target_order_id = kite.place_order(
             tradingsymbol=tradingsymbol,
             exchange=kite.EXCHANGE_NSE,
-            transaction_type=kite.TRANSACTION_TYPE_SELL,
+            transaction_type=transactionType,
             quantity=quantity,
             order_type=kite.ORDER_TYPE_LIMIT,
             price=target_price,
