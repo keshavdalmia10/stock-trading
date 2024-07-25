@@ -12,7 +12,7 @@ from tenacity import (
 import logging 
 logger = logging.getLogger(__name__)
 
-api_key = "sk-None-xhbgw3ut2sxC7lhqExOOT3BlbkFJ2TkZDDyCHPBFqJLx3YlD"
+api_key = "sk-None-awXYzqp0ZPikWNeU9VW6T3BlbkFJpCC9GspnW2yM9NXCPL1y"
 
 headers = {
   "Content-Type": "application/json",

@@ -193,7 +193,7 @@ def only_stock_data_analysis(stock : Stock):
 
     user_message = Message(role=Role.USER, content=[ user_prompt_text])
 
-    payload = Payload(model=Model.GPT4o, messages= [system_message, example_user_message, example_assistant_message, user_message])
+    payload = Payload(model=Model.GPT4, messages= [system_message, example_user_message, example_assistant_message, user_message])
 
     answer = AI.getResponse(payload=payload.getJson())
     

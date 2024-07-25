@@ -46,6 +46,22 @@ import ai_analysis
 # stock2.testwrite("Anyting")
 # print(stock1.analysis)
 # print(stock2.analysis)
-print(f'Initial strategy : {AIStrategyConfig.get_strategy()}')
-AIStrategyConfig.set_strategy(AIStrategy.GENERATE_AND_USE_CANDLESTICK_GRAPH_AND_PIVOT)
-print(f'Changed strategy : {AIStrategyConfig.get_strategy()}')
+
+# input_str = input("Enter instrument tokens to add (comma-separated) or 'exit' to quit: ")
+# string_split = input_str.split()
+# tokens_to_add = [token.strip() for token in string_split[1].split(",")]
+# print(tokens_to_add)
+def execute_command(command):
+    # Convert the command to lowercase for case-insensitive comparison
+    if command.lower().startswith("add "):
+        items = [item.strip().upper() for item in command[3:].split(',')]
+        print(items)
+    else:
+        print("Invalid command")
+
+# Example usage
+command1 = "add Reliance, UBL, apple"
+execute_command(command1)
+
+command2 = "ADD google, MICROSOFT, Amazon"
+execute_command(command2)

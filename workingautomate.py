@@ -8,7 +8,10 @@ import logging
 import trader as trader
 import math
 import time
+import os
 from ai_strategy import AIStrategy, AIStrategyConfig
+import json
+from datetime import datetime, timedelta
 # from logging_config import LogLevel, set_logging_level
 from stock import Stock
 logger = logging.getLogger(__name__)
@@ -18,19 +21,14 @@ logger = logging.getLogger(__name__)
 #Credentials
 api_key = "d2myrf8n2p720jby"
 api_secret = "4l6bswdi9d5ti0dqki6kffoycgwpgla1"
-access_token = "JAZjCdT3HZcXzbiSKj8likDYzXL2RUVP"
 
 #variables
 THRESHOLD_PERCT = 1.5
 MINIMUM_BALANCE = 2000
-RATE_PER_STOCK = 9000
+RATE_PER_STOCK = 13000
 STOCK_CANCEL_DELAY = 10 #in seconds
 AIStrategyConfig.set_strategy(AIStrategy.GENERATE_AND_USE_STOCKDATA) #set ai strategy
 
-# Initialize KiteTicker object
-kws = KiteTicker(api_key, access_token)
-kite = KiteConnect(api_key=api_key)
-kite.set_access_token(access_token)
 
 # Queue to handle subscription changes
 subscription_queue = Queue()
@@ -39,12 +37,61 @@ instrument_stock_dic = {}
 
 showoutput = False
 
+session_file = "kite_session.json"
+
+def datetime_handler(x):
+    if isinstance(x, datetime):
+        return x.isoformat()
+    raise TypeError("Unknown type")
+
+def save_session(data):
+    # Convert all datetime objects to strings before saving
+    data = json.dumps(data, default=datetime_handler)
+    with open(session_file, "w") as file:
+        file.write(data)
+
+def load_session():
+    if os.path.exists(session_file):
+        with open(session_file, "r") as file:
+            data = json.load(file)
+            if 'expiry' in data:
+                data['expiry'] = datetime.fromisoformat(data['expiry'])
+            return data
+    return None
+
+
+# Initialize KiteTicker object
+
+kite = KiteConnect(api_key=api_key)
+session_data = load_session()
+access_token = ""
+if session_data and session_data.get("access_token") and (session_data.get("expiry") and session_data.get("expiry") > datetime.now()):
+    kite.set_access_token(session_data["access_token"])
+    access_token = session_data["access_token"]
+    print("Using saved access token.")
+else:
+    print("No valid session found, require login.")
+    print("Visit this URL to login:", kite.login_url())
+    request_token = input("Enter the request token: ")
+    data = kite.generate_session(request_token, api_secret=api_secret)
+    kite.set_access_token(data["access_token"])
+    access_token = data["access_token"]
+    # Update data with expiry
+    data['expiry'] = datetime.now() + timedelta(days=1)
+    save_session(data)
+
+kws = KiteTicker(api_key, access_token)
+
 def is_within_threshold(entry_price, latest_price, threshold_percentage):
     threshold_value =entry_price * (threshold_percentage / 100.0)
     lower_bound = entry_price - threshold_value
     upper_bound = entry_price + threshold_value
 
     return lower_bound <= latest_price <= upper_bound
+
+def is_difference_not_greater_than_2(num1, num2):
+    difference = abs(num1 - num2)
+    return difference <= 2
 
 def round_to_nearest_0_05(value):
     return round(value * 20) / 20
@@ -74,14 +121,14 @@ def on_ticks(ws, ticks):
         target = round_to_nearest_0_05(target)
         stoploss = round_to_nearest_0_05(stoploss)
         if(stocktradingStrategy.lower() == "long"):
-            if(last_price >= entry and is_within_threshold(entry_price=entry, latest_price=last_price, threshold_percentage=THRESHOLD_PERCT) and live_balance() - RATE_PER_STOCK >= MINIMUM_BALANCE):
+            if(last_price >= entry and is_within_threshold(entry_price=entry, latest_price=last_price, threshold_percentage=THRESHOLD_PERCT) and is_difference_not_greater_than_2(entry,last_price) and live_balance() - RATE_PER_STOCK >= MINIMUM_BALANCE):
                 qty = math.floor(RATE_PER_STOCK / margin)
                 place_stock_order(qty, tradablename, kite.TRANSACTION_TYPE_BUY)
                 place_stoploss(qty, stoploss, tradablename, kite.TRANSACTION_TYPE_SELL)
                 place_target(qty,target, tradablename, kite.TRANSACTION_TYPE_SELL)
                 handle_post_order_tasks(tradablename, instrumenttoken)
         elif(stocktradingStrategy.lower() == "short"):
-            if(last_price <= entry and is_within_threshold(entry_price=entry, latest_price=last_price, threshold_percentage=THRESHOLD_PERCT) and live_balance() - RATE_PER_STOCK >= MINIMUM_BALANCE):
+            if(last_price <= entry and is_within_threshold(entry_price=entry, latest_price=last_price, threshold_percentage=THRESHOLD_PERCT) and is_difference_not_greater_than_2(entry,last_price) and live_balance() - RATE_PER_STOCK >= MINIMUM_BALANCE):
                 qty = math.floor(RATE_PER_STOCK / margin)
                 place_stock_order(qty, tradablename, kite.TRANSACTION_TYPE_SELL)
                 place_stoploss(qty, stoploss, tradablename, kite.TRANSACTION_TYPE_BUY)
@@ -207,6 +254,8 @@ def on_order_update(ws, data):
             cancel_thread = threading.Thread(target=process_stock_cancel, args=(tradingsymbol,))
             cancel_thread.daemon = True  # Daemonize thread
             cancel_thread.start()
+        if oder_type == 'LIMIT' and order_transactin_type == 'BUY' and order_status == 'COMPLETE':
+            print(f"Manually cancel : {tradingsymbol}")
     except Exception as e:
         print((f"Error in on_order_update callback for order {order_id} ({tradingsymbol}): {str(e)}"))
         logger.warning(f"Error in on_order_update callback for order {order_id} ({tradingsymbol}): {str(e)}")
