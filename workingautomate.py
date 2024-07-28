@@ -89,9 +89,17 @@ def is_within_threshold(entry_price, latest_price, threshold_percentage):
 
     return lower_bound <= latest_price <= upper_bound
 
-def is_difference_not_greater_than_2(num1, num2):
+def is_difference_not_greater_than(num1, num2):
     difference = abs(num1 - num2)
-    return difference <= 2
+    
+    if num1 <= 100:
+        return difference <= 0.05
+    elif num1 <= 500 and num1 > 100:
+        return difference <= 0.2
+    elif num1 <=1000 and num1 > 500:
+        return difference <= 1
+    else:
+        return difference <= 1.25
 
 def round_to_nearest_0_05(value):
     return round(value * 20) / 20
@@ -121,24 +129,25 @@ def on_ticks(ws, ticks):
         target = round_to_nearest_0_05(target)
         stoploss = round_to_nearest_0_05(stoploss)
         if(stocktradingStrategy.lower() == "long"):
-            if(last_price >= entry and is_within_threshold(entry_price=entry, latest_price=last_price, threshold_percentage=THRESHOLD_PERCT) and is_difference_not_greater_than_2(entry,last_price) and live_balance() - RATE_PER_STOCK >= MINIMUM_BALANCE):
+            if(last_price >= entry and is_within_threshold(entry_price=entry, latest_price=last_price, threshold_percentage=THRESHOLD_PERCT) and is_difference_not_greater_than(entry,last_price) and live_balance() - RATE_PER_STOCK >= MINIMUM_BALANCE):
                 qty = math.floor(RATE_PER_STOCK / margin)
+                print("\n")
                 place_stock_order(qty, tradablename, kite.TRANSACTION_TYPE_BUY)
                 place_stoploss(qty, stoploss, tradablename, kite.TRANSACTION_TYPE_SELL)
                 place_target(qty,target, tradablename, kite.TRANSACTION_TYPE_SELL)
                 handle_post_order_tasks(tradablename, instrumenttoken)
         elif(stocktradingStrategy.lower() == "short"):
-            if(last_price <= entry and is_within_threshold(entry_price=entry, latest_price=last_price, threshold_percentage=THRESHOLD_PERCT) and is_difference_not_greater_than_2(entry,last_price) and live_balance() - RATE_PER_STOCK >= MINIMUM_BALANCE):
+            if(last_price <= entry and is_within_threshold(entry_price=entry, latest_price=last_price, threshold_percentage=THRESHOLD_PERCT) and is_difference_not_greater_than(entry,last_price) and live_balance() - RATE_PER_STOCK >= MINIMUM_BALANCE):
                 qty = math.floor(RATE_PER_STOCK / margin)
+                print("\n")
                 place_stock_order(qty, tradablename, kite.TRANSACTION_TYPE_SELL)
                 place_stoploss(qty, stoploss, tradablename, kite.TRANSACTION_TYPE_BUY)
                 place_target(qty,target, tradablename, kite.TRANSACTION_TYPE_BUY)
 
                 handle_post_order_tasks(tradablename, instrumenttoken)
 
-        # print(f"Instrument Token: {tick['instrument_token']}, Last Price: {tick['last_price']}")
         if showoutput:
-            print(f'{tradablename}, entry: {entry}, currprice: {last_price}')
+            print(f'{tradablename}, entry: {entry}, currprice: {last_price}   diff(curr - entry): {last_price - entry}')
 
 def handle_post_order_tasks(tradablename, instrumenttoken):
     removeNameFromSetInqeueu([tradablename])
@@ -188,6 +197,16 @@ def cancel_remaining_orders(stocknamelist):
         except Exception as e:
             logging.error(f"Error cancelling orders: {e}")
 
+def cancel_all_orders():
+    orders = kite.orders()
+    for stockorder in orders:
+        order_id = stockorder['order_id']
+        order_variety = stockorder['variety']
+        order_stock_name = stockorder['tradingsymbol'] 
+        status = stockorder['status']
+        if(status == 'TRIGGER PENDING' or status == 'OPEN'):
+            print(f'name: {order_stock_name} order id : {order_id} variety: {order_variety}')
+        #   kite.cancel_order(order_id=order_id, variety=order_variety)
 
 def place_stoploss(quantity, stoploss_price, tradingsymbol, transactionType):
         try: 
@@ -255,7 +274,10 @@ def on_order_update(ws, data):
             cancel_thread.daemon = True  # Daemonize thread
             cancel_thread.start()
         if oder_type == 'LIMIT' and order_transactin_type == 'BUY' and order_status == 'COMPLETE':
-            print(f"Manually cancel : {tradingsymbol}")
+            # print(f"Manually cancel : {tradingsymbol}")
+            cancel_thread = threading.Thread(target=process_stock_cancel, args=(tradingsymbol,))
+            cancel_thread.daemon = True  # Daemonize thread
+            cancel_thread.start()
     except Exception as e:
         print((f"Error in on_order_update callback for order {order_id} ({tradingsymbol}): {str(e)}"))
         logger.warning(f"Error in on_order_update callback for order {order_id} ({tradingsymbol}): {str(e)}")
@@ -359,38 +381,69 @@ def user_input_loop():
         try:
             print("\n")
             input_str = input("Enter instrument tokens to add (comma-separated) or 'exit' to quit: ")
-            string_split = input_str.split()
-            command = string_split[0].lower()
-            if command == 'exit':
+            if input_str.lower().startswith("exit "):
                 print("Exiting...")
                 subscription_queue.put(None)
                 kws.stop()
                 break
-            elif command == 'add':
-                tokens_to_add = [token.strip() for token in string_split[1].split(",")]
+
+            elif input_str.lower().startswith("add "):
+                tokens_to_add = [item.strip().upper() for item in input_str[3:].split(',')]
                 print(f'Tokens to add :{tokens_to_add}')
                 stockobjectlist = trader.get_tradable_stocklist(tokens_to_add)
                 print(f'Trade stock size : {len(stockobjectlist)}')
                 if len(stockobjectlist) >= 1:
                     instruements_to_add = mapInstrumentTokens(stockobjectlist)
                     update_subscriptions(add_tokens=instruements_to_add)
-            elif command == 'rem':
-                stocknames_to_remove = [token.strip() for token in string_split[1].split(",")]
+
+            elif input_str.lower().startswith("rem "):
+                stocknames_to_remove = [item.strip().upper() for item in input_str[3:].split(',')]
                 filtered_stocksname_inqueue = [s for s in stocknames_to_remove if s in stocksetInQueue]
                 if len(filtered_stocksname_inqueue) >= 1:
                     removeNameFromSetInqeueu(filtered_stocksname_inqueue)
                     instruments_to_remove = [fetch_instrument_token(stockname) for stockname in filtered_stocksname_inqueue]    
                     update_subscriptions(remove_tokens=instruments_to_remove)
-            elif command == 'queue':
+
+            elif input_str.lower().startswith("queue"):
                 print(stocksetInQueue)
-            elif command == 'balance':
+
+            elif input_str.lower().startswith("balance"):
                 balance = live_balance()
                 print(f'balance : {balance}')
-            elif command == 'output':
+
+            elif input_str.lower().startswith("output"):
                 toggleoutput()
-            elif command == 'cancel':
-                token_to_cancel = [token.strip() for token in string_split[1].split(",")]
+
+            elif input_str.lower().startswith("cancel "):
+                token_to_cancel = [item.strip().upper() for item in input_str[6:].split(',')]
+                print(f'Cancelling : {token_to_cancel}')
                 cancel_remaining_orders(token_to_cancel)
+
+            elif input_str.lower().startswith("clear queue"):
+                 stocks_in_queue = [s for s in stocksetInQueue]
+                 if len(stocks_in_queue) >= 1:
+                    removeNameFromSetInqeueu(stocks_in_queue)
+                    instruments_to_remove = [fetch_instrument_token(stockname) for stockname in stocks_in_queue]    
+                    update_subscriptions(remove_tokens=instruments_to_remove)
+                 else:
+                     print("Queue is already empty")
+
+            elif input_str.lower().startswith("positions"):
+                    cancel_all_orders()
+                    # positions = kite.positions()
+                    # if positions:
+                    #     position_stocks = [position for position in positions['day'] if position['quantity'] != 0]
+                    #     if position_stocks:
+                    #         for stock in position_stocks:
+                    #             stockExitName = stock['tradingsymbol']
+                    #             stockExitQty = stock['quantity']
+                    #             stockExitTransaction = kite.TRANSACTION_TYPE_SELL if stockExitQty > 0 else kite.TRANSACTION_TYPE_BUY
+                    #             # place_stock_order(abs(stockExitQty), stockExitName, stockExitTransaction)
+
+                    #     else:
+                    #         print("No stocks in positions.")
+                    # else:
+                    #     print("Failed to retrieve positions.")
                 
         except ValueError:
             print("Invalid input. Please enter comma-separated instrument tokens.")
