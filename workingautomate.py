@@ -390,7 +390,7 @@ def user_input_loop():
             elif input_str.lower().startswith("add "):
                 tokens_to_add = [item.strip().upper() for item in input_str[3:].split(',')]
                 print(f'Tokens to add :{tokens_to_add}')
-                stockobjectlist = trader.get_tradable_stocklist(tokens_to_add)
+                stockobjectlist = trader.populateStockNamesWithAI(tokens_to_add)
                 print(f'Trade stock size : {len(stockobjectlist)}')
                 if len(stockobjectlist) >= 1:
                     instruements_to_add = mapInstrumentTokens(stockobjectlist)

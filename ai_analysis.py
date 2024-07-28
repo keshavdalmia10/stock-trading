@@ -189,7 +189,8 @@ def only_stock_data_analysis(stock : Stock):
 
     stockDataFor1d_1m = tickerHelper.get_stock_data(stock_name, "1d", "1m")
 
-    stockDataFor1d_1m = stockDataFor1d_1m[-90:]
+    # Uncomment the below lines after 11:30am
+    # stockDataFor1d_1m = stockDataFor1d_1m[-90:]
 
     user_prompt_text = Content(content_type= ContentType.TEXT, value=PrompText.USER_PROMPT_ONLY_STOCKDATA.format(stockname = stock_name, stockdata = stockDataFor1d_1m))
 
