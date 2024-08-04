@@ -51,17 +51,6 @@ import ai_analysis
 # string_split = input_str.split()
 # tokens_to_add = [token.strip() for token in string_split[1].split(",")]
 # print(tokens_to_add)
-def execute_command(command):
-    # Convert the command to lowercase for case-insensitive comparison
-    if command.lower().startswith("add "):
-        items = [item.strip().upper() for item in command[3:].split(',')]
-        print(items)
-    else:
-        print("Invalid command")
-
-# Example usage
-command1 = "add Reliance, UBL, apple"
-execute_command(command1)
-
-command2 = "ADD google, MICROSOFT, Amazon"
-execute_command(command2)
+a = tickerHelper.get_stock_data("IDEA.NS", "1d", "1m")
+a = a[-90:]
+print(type(a))

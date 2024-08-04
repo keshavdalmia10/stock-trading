@@ -24,7 +24,7 @@ api_secret = "4l6bswdi9d5ti0dqki6kffoycgwpgla1"
 
 #variables
 THRESHOLD_PERCT = 1.5
-MINIMUM_BALANCE = 2000
+MINIMUM_BALANCE = 1000
 RATE_PER_STOCK = 13000
 STOCK_CANCEL_DELAY = 10 #in seconds
 AIStrategyConfig.set_strategy(AIStrategy.GENERATE_AND_USE_STOCKDATA) #set ai strategy
@@ -206,7 +206,7 @@ def cancel_all_orders():
         status = stockorder['status']
         if(status == 'TRIGGER PENDING' or status == 'OPEN'):
             print(f'name: {order_stock_name} order id : {order_id} variety: {order_variety}')
-        #   kite.cancel_order(order_id=order_id, variety=order_variety)
+            kite.cancel_order(order_id=order_id, variety=order_variety)
 
 def place_stoploss(quantity, stoploss_price, tradingsymbol, transactionType):
         try: 
@@ -428,22 +428,25 @@ def user_input_loop():
                  else:
                      print("Queue is already empty")
 
-            elif input_str.lower().startswith("positions"):
+            elif input_str.lower().startswith("exit all"):
                     cancel_all_orders()
-                    # positions = kite.positions()
-                    # if positions:
-                    #     position_stocks = [position for position in positions['day'] if position['quantity'] != 0]
-                    #     if position_stocks:
-                    #         for stock in position_stocks:
-                    #             stockExitName = stock['tradingsymbol']
-                    #             stockExitQty = stock['quantity']
-                    #             stockExitTransaction = kite.TRANSACTION_TYPE_SELL if stockExitQty > 0 else kite.TRANSACTION_TYPE_BUY
-                    #             # place_stock_order(abs(stockExitQty), stockExitName, stockExitTransaction)
+                    positions = kite.positions()
+                    if positions:
+                        position_stocks = [position for position in positions['day'] if position['quantity'] != 0]
+                        if position_stocks:
+                            for stock in position_stocks:
+                                stockExitName = stock['tradingsymbol']
+                                stockExitQty = stock['quantity']
+                                stockExitTransaction = kite.TRANSACTION_TYPE_SELL if stockExitQty > 0 else kite.TRANSACTION_TYPE_BUY
+                                # print(stockExitName)
+                                # print(stockExitQty)
+                                # print(stockExitTransaction)
+                                place_stock_order(abs(stockExitQty), stockExitName, stockExitTransaction)
 
-                    #     else:
-                    #         print("No stocks in positions.")
-                    # else:
-                    #     print("Failed to retrieve positions.")
+                        else:
+                            print("No stocks in positions.")
+                    else:
+                        print("Failed to retrieve positions.")
                 
         except ValueError:
             print("Invalid input. Please enter comma-separated instrument tokens.")
