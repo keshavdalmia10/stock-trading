@@ -42,10 +42,10 @@ class Stock:
 
     @target_point.setter
     def target_point(self, new_target_point):
-        if isinstance(new_target_point, (int, float)):
+        if isinstance(new_target_point, (int, float)) and new_target_point > 0:
             self._target_point = new_target_point
         else:
-            raise ValueError("Target point must be float or integer")
+            raise ValueError("Target point must be float/integer and > 0")
         
     @property
     def stop_loss(self):
@@ -53,10 +53,10 @@ class Stock:
 
     @stop_loss.setter
     def stop_loss(self, new_stoploss):
-        if isinstance(new_stoploss, (int, float)):
+        if isinstance(new_stoploss, (int, float)) and new_stoploss > 0:
             self._stop_loss = new_stoploss
         else:
-            raise ValueError("Stop loss must be float or integer.")
+            raise ValueError("Stop loss must be float/integer and > 0.")
         
     @property
     def entry_point(self):

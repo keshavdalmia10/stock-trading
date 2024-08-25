@@ -25,7 +25,7 @@ api_secret = "4l6bswdi9d5ti0dqki6kffoycgwpgla1"
 #variables
 THRESHOLD_PERCT = 1.5
 MINIMUM_BALANCE = 1000
-RATE_PER_STOCK = 13000
+RATE_PER_STOCK = 8000
 STOCK_CANCEL_DELAY = 10 #in seconds
 AIStrategyConfig.set_strategy(AIStrategy.GENERATE_AND_USE_STOCKDATA) #set ai strategy
 
@@ -287,7 +287,7 @@ def fetch_instrument_token(tradingsymbol):
         instruments = kite.instruments(exchange="NSE")
         for instrument in instruments:
             if instrument['tradingsymbol'] == tradingsymbol:
-                print(f"Found {tradingsymbol}: Token = {instrument['instrument_token']}, Name = {instrument['name']}")
+                # print(f"Found {tradingsymbol}: Token = {instrument['instrument_token']}, Name = {instrument['name']}")
                 return instrument['instrument_token']
     except Exception as e:
         print(f"Failed to fetch instruments: {str(e)}")
@@ -403,6 +403,8 @@ def user_input_loop():
                     removeNameFromSetInqeueu(filtered_stocksname_inqueue)
                     instruments_to_remove = [fetch_instrument_token(stockname) for stockname in filtered_stocksname_inqueue]    
                     update_subscriptions(remove_tokens=instruments_to_remove)
+                    print(f'Removed : {filtered_stocksname_inqueue}.')
+                print(stocksetInQueue)
 
             elif input_str.lower().startswith("queue"):
                 print(stocksetInQueue)
@@ -425,6 +427,7 @@ def user_input_loop():
                     removeNameFromSetInqeueu(stocks_in_queue)
                     instruments_to_remove = [fetch_instrument_token(stockname) for stockname in stocks_in_queue]    
                     update_subscriptions(remove_tokens=instruments_to_remove)
+                    print(f'QUEUE CLEARED')
                  else:
                      print("Queue is already empty")
 
