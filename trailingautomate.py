@@ -96,6 +96,25 @@ def is_difference_not_greater_than(num1, num2):
         return difference <= 1
     else:
         return difference <= 1.25
+    
+def is_current_price_close_to_target(curr_price, target, strategy):
+    if not is_difference_not_greater_than(curr_price, target):
+        return False
+
+    if strategy == "long":
+        return curr_price < target
+    elif strategy == "short":
+        return curr_price > target
+    else:
+        raise ValueError(f"Invalid strategy: {strategy}")
+    
+def is_current_price_close_to_initialTarget(curr_price, initial_target, strategy):
+    if strategy == "long":
+        return curr_price >= initial_target
+    elif strategy == "short":
+        return curr_price <= initial_target
+    else:
+        raise ValueError(f"Invalid strategy: {strategy}")
 
 def round_to_nearest_0_05(value):
     return round(value * 20) / 20
@@ -117,10 +136,15 @@ def on_ticks(ws, ticks):
         stockname = stock.stock_name
         target = stock.target_point
         stoploss = stock.stop_loss
+        stock_strategy = stock.trading_strategy
 
-        if not stock.target_removed and is_difference_not_greater_than(last_price, target) and last_price < target:
+        if not stock.target_removed and is_current_price_close_to_target(last_price, target, stock_strategy):
             diff = abs(target - stoploss)
-            new_target = target + (0.5 * diff)
+            new_target = 0
+            if(stock_strategy == "long"):
+                new_target = target + (0.5 * diff)
+            elif(stock_strategy == "short"):
+                new_target = target - (0.5 * diff)
             rounded_target = round_to_nearest_0_05(new_target) 
             modify_target_order(stock.target_id, rounded_target)
             print(f'Target for {stockname} modified from {target} to {rounded_target}')
@@ -128,8 +152,13 @@ def on_ticks(ws, ticks):
             stock.initial_target = target
             stock.target_removed = True
         
-        elif stock.target_removed and last_price >= stock.initial_target:
-            modify_stoploss_order(stock.stoploss_id, stock.initial_target)
+        elif stock.target_removed and is_current_price_close_to_initialTarget(last_price, stock.initial_target, stock_strategy):
+            final_stoploss = 0
+            if(stock_strategy == "long"):
+                final_stoploss = stock.initial_target - 0.05
+            elif(stock_strategy == "short"):
+                final_stoploss = stock.initial_target + 0.05
+            modify_stoploss_order(stock.stoploss_id, final_stoploss)
             print(f'Stoploss for {stockname} modified from {stoploss} to {stock.initial_target - 0.05}')
             stock.target_removed = False
 
@@ -176,10 +205,19 @@ def addTrailingStockInQueue(stockname):
             elif order['order_type'] == 'LIMIT' and order['status'] == 'OPEN':
                 trailing_stock.target_id = int(order['order_id'])
                 trailing_stock.target_point = order['price']
-    
-    print(f'{trailing_stock.stock_name}  StoplossID:{trailing_stock.stoploss_id} price:{trailing_stock.stop_loss}')
+
+    if(trailing_stock.target_point > trailing_stock.stop_loss):
+        trailing_stock.trading_strategy = "long"
+    elif(trailing_stock.target_point < trailing_stock.stop_loss):
+        trailing_stock.trading_strategy = "short"
+    else:
+        print(f'Stock {stockname} strategy assign error')
+        return
+
+    print(f'{trailing_stock.stock_name}  StoplossID:{trailing_stock.stoploss_id} stoploss_price:{trailing_stock.stop_loss}')
+    print(f'{trailing_stock.stock_name}  TargetID:{trailing_stock.target_id} target_price:{trailing_stock.target_point}')
+    print(f'{trailing_stock.stock_name} strategy: {trailing_stock.trading_strategy}')
     print()
-    print(f'{trailing_stock.stock_name}  TargetID:{trailing_stock.target_id} price:{trailing_stock.target_point}')
 
     instruements_to_add = mapInstrumentTokens(trailing_stock)
     update_subscriptions(add_tokens=instruements_to_add)
@@ -209,12 +247,12 @@ def on_order_update(ws, data):
         tradingsymbol = data['tradingsymbol']
         order_transactin_type = data['transaction_type']
         oder_type = data['order_type']
-        if oder_type == 'MARKET' and order_transactin_type == 'BUY' and order_status == 'COMPLETE':
+        if oder_type == 'MARKET' and (order_transactin_type == 'BUY' or order_transactin_type == 'SELL') and order_status == 'COMPLETE':
             add_stock_thread = threading.Thread(target=add_trailing_stock, args=(tradingsymbol,))
             add_stock_thread.daemon = True  # Daemonize thread
             add_stock_thread.start()
 
-        elif oder_type == 'LIMIT' and order_transactin_type == 'SELL' and order_status == 'COMPLETE':
+        elif oder_type == 'LIMIT' and (order_transactin_type == 'SELL' or order_transactin_type == 'BUY') and order_status == 'COMPLETE':
             print(f"Removed stock: {tradingsymbol} from queue")
             if tradingsymbol in stocksetInQueue:
                 removeNameFromSetInqeueu([tradingsymbol])
@@ -318,7 +356,7 @@ def user_input_loop():
     while True:
         try:
             print("\n")
-            input_str = input("Enter command: ")
+            input_str = input("TRAILING STRATEGY (only add one stock at a time): ")
             if input_str.lower().startswith("exit "):
                 print("Exiting...")
                 subscription_queue.put(None)

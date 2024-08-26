@@ -6,7 +6,7 @@ stock2 = TrailingStock("Stock2")
 print(f'{stock1.stock_name} - {stock1.target_removed}')
 print(f'{stock2.stock_name} - {stock2.target_removed}')
 stock1.target_removed = True
-stock2.target_removed = True
+# stock2.target_removed = True
 print(f'{stock1.stock_name} - {stock1.target_removed}')
 print(f'{stock2.stock_name} - {stock2.target_removed}')
 
@@ -29,3 +29,13 @@ print(f'{stock2.stock_name} - {stock2.initial_target}')
 stock1.initial_target = 30000
 
 print(f'{j}')
+
+
+import schedule
+def exitPrint():
+    print("Exit all asap")
+
+schedule.every().day.at("15:21").do(exitPrint)
+while True:
+    # print("1")
+    schedule.run_pending()

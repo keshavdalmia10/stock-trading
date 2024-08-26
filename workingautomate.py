@@ -197,7 +197,7 @@ def cancel_remaining_orders(stocknamelist):
         except Exception as e:
             logging.error(f"Error cancelling orders: {e}")
 
-def cancel_all_orders():
+def cancel_all_open_orders():
     orders = kite.orders()
     for stockorder in orders:
         order_id = stockorder['order_id']
@@ -432,27 +432,30 @@ def user_input_loop():
                      print("Queue is already empty")
 
             elif input_str.lower().startswith("exit all"):
-                    cancel_all_orders()
-                    positions = kite.positions()
-                    if positions:
-                        position_stocks = [position for position in positions['day'] if position['quantity'] != 0]
-                        if position_stocks:
-                            for stock in position_stocks:
-                                stockExitName = stock['tradingsymbol']
-                                stockExitQty = stock['quantity']
-                                stockExitTransaction = kite.TRANSACTION_TYPE_SELL if stockExitQty > 0 else kite.TRANSACTION_TYPE_BUY
-                                # print(stockExitName)
-                                # print(stockExitQty)
-                                # print(stockExitTransaction)
-                                place_stock_order(abs(stockExitQty), stockExitName, stockExitTransaction)
-
-                        else:
-                            print("No stocks in positions.")
-                    else:
-                        print("Failed to retrieve positions.")
+                    cancel_all_open_orders()
+                    exit_all_positions()
                 
         except ValueError:
             print("Invalid input. Please enter comma-separated instrument tokens.")
+
+def exit_all_positions():
+    positions = kite.positions()
+    if positions:
+        position_stocks = [position for position in positions['day'] if position['quantity'] != 0]
+        if position_stocks:
+            for stock in position_stocks:
+                stockExitName = stock['tradingsymbol']
+                stockExitQty = stock['quantity']
+                stockExitTransaction = kite.TRANSACTION_TYPE_SELL if stockExitQty > 0 else kite.TRANSACTION_TYPE_BUY
+                                # print(stockExitName)
+                                # print(stockExitQty)
+                                # print(stockExitTransaction)
+                place_stock_order(abs(stockExitQty), stockExitName, stockExitTransaction)
+
+        else:
+            print("No stocks in positions.")
+    else:
+        print("Failed to retrieve positions.")
 
 def removeNameFromSetInqeueu(filtered_stocksname_inqueue):
     for name in filtered_stocksname_inqueue:
