@@ -1,30 +1,25 @@
-from content import Content, ContentType
-from message import Message, Role
-from payload import Payload
-from model import Model
-import ai as AI
-from tickerDataHelper import get_Classic_Fibonacci, trigger_1d_5min, getTickerImagePath
-import json
+import trader as trader
+import datetime
+import logging
+from logging_config import LogLevel, set_logging_level
+from ai_strategy import AIStrategy, AIStrategyConfig
+logger = logging.getLogger(__name__)
 
-# Example usage:
-# text_content = Content(content_type= ContentType.TEXT, value="Analyze the image")
-# image_content = Content(content_type=ContentType.IMAGE_URL, value="my-stock-app/AAPL_Chart.png")
+set_logging_level(LogLevel.INFO)
 
-# message = Message(role=Role.USER, content=[text_content, image_content])
+startTime = datetime.datetime.now()
 
-# payload = Payload(model=Model.GPT4o, messages=[message])
+# stocklist = ["ZOMATO", "RELIANCE", "PNB", "IDEA", "YESBANK", "INDUSTOWER", "SAIL", "BHEL"]
+# stocklist = ["KINGFA", "SRGHFL", "STCINDIA", "DLINKINDIA","SHIVALIK", "GMBREW", "CREATIVE", "CASTROLIND"]
+# stocklist = ["IZMO", "THEINVEST", "ONEPOINT", "DCM", "HUDCO", "GPPL", "ZYDUSWELL", "BOROLTD"]
+# stocklist = ["SOTL", "PONNIERODE", "HARSHA", "SGIL","PYRAMID", "EMAMIPAP", "PRAKASH", "TVSSRICH", "PITTIEING"]
 
-# answer = AI.getResponse(payload=payload.getJson())
-# print(answer)
-stockname = "ZOMATO.NS"
-fibonaci = get_Classic_Fibonacci("RELIANCE.NS", "1d", "5m")
+# stocklist = ["IDEA", "YESBANK", "PNB", "HFCL","INDUSTOWER", "SAIL", "INDIACEM", "NHPC"]
+# stocklist = ["UJJIVANSFB", "BHEL", "CANBK", "GMRINFRA","ZOMATO"]
+stocklist = ['HDFCLIFE']
+# trader.get_tradable_stocklist(stocklist)
+trader.populateStockNamesWithAI(stocklist)
 
-# print(fibonaci)
-text_content = Content(content_type=ContentType.TEXT, value = "Analyze the json")
-f_content = Content(content_type=ContentType.TEXT, value = json.dumps())
-message = Message(role=Role.USER, content=[text_content,f_content])
-payload = Payload(model=Model.GPT4o, messages=[message])
-print(payload.getJson())
-answer = AI.getResponse(payload=payload.getJson())
-print(answer)
 
+endTime = datetime.datetime.now()
+logger.info(f'Time taken to execute : {endTime - startTime}')
